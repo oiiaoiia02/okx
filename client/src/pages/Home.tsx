@@ -5,6 +5,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { OKX_TOOLS, type OKXTool } from "@/data/okxTools";
 import { getTicker, formatPrice, formatVolume, type TokenDisplayData } from "@/services/okxApi";
 import ParticleBackground from "@/components/ParticleBackground";
+import TokenLogo from "@/components/TokenLogo";
 import {
   Zap, Terminal, Cpu, Wallet, Eye, FlaskConical, Shield, History,
   Brain, BookOpen, Layers, Search, ArrowRight, Copy, Check,
@@ -144,11 +145,12 @@ function LivePriceTicker() {
     >
       {prices.map((p) => (
         <Link key={p.instId} href="/token-monitor">
-          <div className="flex items-center gap-3 px-6 py-3 rounded-[14px] border border-border/50 bg-card backdrop-blur-sm hover:border-primary/10 hover:bg-[rgba(255,255,255,0.03)] transition-all duration-300 hover:-translate-y-[1px] cursor-pointer">
-            <span className="text-[12px] font-[800] text-foreground tracking-[0.5px]">{p.symbol}</span>
-            <span className="text-[12px] font-mono text-foreground">${formatPrice(p.price)}</span>
-            <span className={`text-[11px] font-[700] font-mono px-2 py-[2px] rounded-[6px] ${
-              p.change24h >= 0 ? "text-primary bg-primary/6" : "text-red-400 bg-red-400/6"
+          <div className="flex items-center gap-3 px-6 py-3 rounded-[14px] border border-border/50 bg-card backdrop-blur-sm hover:border-primary/15 hover:bg-[rgba(255,255,255,0.03)] transition-all duration-300 hover:-translate-y-[1px] cursor-pointer">
+            <TokenLogo symbol={p.symbol} size={22} />
+            <span className="text-[13px] font-[700] text-foreground tracking-[0.3px]">{p.symbol}</span>
+            <span className="text-[13px] font-mono text-foreground font-[500]">${formatPrice(p.price)}</span>
+            <span className={`text-[11px] font-[700] font-mono px-2.5 py-[3px] rounded-[8px] ${
+              p.change24h >= 0 ? "text-green-400 bg-green-400/8" : "text-red-400 bg-red-400/8"
             }`}>
               {p.change24h >= 0 ? "+" : ""}{p.change24h.toFixed(2)}%
             </span>
