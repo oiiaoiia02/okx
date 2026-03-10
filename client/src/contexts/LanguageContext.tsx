@@ -14,7 +14,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("neuro-link-lang");
+      const saved = localStorage.getItem("okx-ai-core-lang");
       if (saved === "en" || saved === "zh") return saved;
       return navigator.language.startsWith("zh") ? "zh" : "en";
     }
@@ -23,13 +23,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const setLang = useCallback((l: Lang) => {
     setLangState(l);
-    localStorage.setItem("neuro-link-lang", l);
+    localStorage.setItem("okx-ai-core-lang", l);
   }, []);
 
   const toggleLang = useCallback(() => {
     setLangState((prev) => {
       const next = prev === "en" ? "zh" : "en";
-      localStorage.setItem("neuro-link-lang", next);
+      localStorage.setItem("okx-ai-core-lang", next);
       return next;
     });
   }, []);
