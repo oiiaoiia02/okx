@@ -13,7 +13,7 @@ import {
   Mic, MicOff, Play, Send, TrendingUp, TrendingDown, Activity, MessageSquare,
 } from "lucide-react";
 
-/* ─── Intent matching engine ─── */
+/* ─── Intent matching engine — searches all 83 tools ─── */
 const INTENT_KEYWORDS: Record<string, string[]> = {
   market_ticker: ["price", "价格", "行情", "ticker", "btc", "eth", "sol", "查", "look", "check"],
   market_orderbook: ["orderbook", "订单簿", "depth", "深度", "bid", "ask", "买卖"],
@@ -34,36 +34,61 @@ const INTENT_KEYWORDS: Record<string, string[]> = {
   option_place_order: ["option", "期权"],
 };
 
+interface MatchedTool {
+  tool: OKXTool;
+  score: number;
+}
+
 function matchIntents(query: string): OKXTool[] {
   if (!query.trim()) return [];
   const q = query.toLowerCase();
-  const scores = new Map<string, number>();
-
-  for (const [toolName, keywords] of Object.entries(INTENT_KEYWORDS)) {
-    let score = 0;
-    for (const kw of keywords) {
-      if (q.includes(kw)) score += kw.length;
-    }
-    if (score > 0) scores.set(toolName, score);
-  }
+  const results: MatchedTool[] = [];
 
   for (const tool of OKX_TOOLS) {
-    const existing = scores.get(tool.name) || 0;
-    let score = existing;
-    if (tool.name.toLowerCase().includes(q)) score += 5;
-    if (tool.descEn.toLowerCase().includes(q)) score += 3;
-    if (tool.descZh.includes(q)) score += 3;
-    for (const tag of tool.tags) {
-      if (tag.toLowerCase().includes(q) || q.includes(tag.toLowerCase())) score += 2;
+    let score = 0;
+
+    // Intent keyword matching
+    const keywords = INTENT_KEYWORDS[tool.name];
+    if (keywords) {
+      for (const kw of keywords) {
+        if (q.includes(kw)) score += kw.length * 2;
+      }
     }
-    if (score > existing) scores.set(tool.name, score);
+
+    // Tool name matching
+    if (tool.name.toLowerCase().includes(q)) score += 10;
+    // Module matching
+    if (tool.module.toLowerCase().includes(q)) score += 6;
+    // Description matching
+    if (tool.descEn.toLowerCase().includes(q)) score += 4;
+    if (tool.descZh.includes(q)) score += 4;
+    // Tag matching
+    for (const tag of tool.tags) {
+      if (tag.toLowerCase().includes(q) || q.includes(tag.toLowerCase())) score += 3;
+    }
+
+    if (score > 0) results.push({ tool, score });
   }
 
-  return Array.from(scores.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([name]) => OKX_TOOLS.find((t) => t.name === name)!)
-    .filter(Boolean);
+  return results
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 8)
+    .map((r) => r.tool);
+}
+
+function countMatchedTools(query: string): number {
+  if (!query.trim()) return 0;
+  const q = query.toLowerCase();
+  return OKX_TOOLS.filter((tool) => {
+    const keywords = INTENT_KEYWORDS[tool.name];
+    if (keywords?.some((kw) => q.includes(kw))) return true;
+    if (tool.name.toLowerCase().includes(q)) return true;
+    if (tool.module.toLowerCase().includes(q)) return true;
+    if (tool.descEn.toLowerCase().includes(q)) return true;
+    if (tool.descZh.includes(q)) return true;
+    if (tool.tags.some((tag) => tag.toLowerCase().includes(q) || q.includes(tag.toLowerCase()))) return true;
+    return false;
+  }).length;
 }
 
 /* ─── Typing animation hook ─── */
@@ -353,6 +378,7 @@ export default function Home() {
   const typedText = useTypingEffect(typingTexts);
 
   const matchedTools = useMemo(() => matchIntents(searchQuery), [searchQuery]);
+  const totalMatched = useMemo(() => countMatchedTools(searchQuery), [searchQuery]);
 
   const toggleVoice = useCallback(() => {
     if (listening) {
@@ -525,38 +551,59 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Intent Preview Dropdown */}
+            {/* Intent Preview Dropdown — real-time filter across all 83 tools */}
             <AnimatePresence>
               {searchFocused && matchedTools.length > 0 && (
                 <motion.div
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  className="absolute top-full left-0 right-0 mt-3 rounded-[16px] border border-border/40 bg-[rgba(12,12,18,0.95)] backdrop-blur-xl shadow-2xl overflow-hidden z-20"
+                  initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  className="absolute top-full left-0 right-0 mt-3 rounded-[18px] border border-border/30 shadow-2xl overflow-hidden z-20"
+                  style={{ background: "rgba(10, 10, 16, 0.96)", backdropFilter: "blur(24px)" }}
                 >
-                  <div className="px-5 py-2.5 border-b border-border/40">
+                  <div className="px-5 py-3 border-b border-border/30 flex items-center justify-between">
                     <span className="text-[10px] text-muted-foreground uppercase tracking-[2px] font-[600]">
-                      {t("Matched Tools", "匹配工具")} ({matchedTools.length})
+                      {t("Matched Tools", "匹配工具")} ({totalMatched}/{OKX_TOOLS.length})
+                    </span>
+                    <span className="text-[9px] text-primary/60 font-[500]">
+                      {t("Click to fill Copilot", "点击填充到 Copilot")}
                     </span>
                   </div>
-                  {matchedTools.map((tool) => (
-                    <button
-                      key={tool.name}
-                      onMouseDown={() => handleToolClick(tool)}
-                      className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-accent/30 transition-colors text-left"
-                    >
-                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: tool.moduleColor }} />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[12px] font-mono text-primary">{tool.name}</div>
-                        <div className="text-[11px] text-muted-foreground truncate">
-                          {t(tool.descEn, tool.descZh)}
+                  <div className="max-h-[320px] overflow-y-auto">
+                    {matchedTools.map((tool, i) => (
+                      <button
+                        key={tool.name}
+                        onMouseDown={() => {
+                          setSearchQuery(t(tool.descEn, tool.descZh));
+                          setLocation(`/copilot?q=${encodeURIComponent(t(tool.descEn, tool.descZh))}`);
+                        }}
+                        className="w-full flex items-center gap-3 px-5 py-3 hover:bg-primary/5 transition-all text-left group"
+                      >
+                        <div className="w-2 h-2 rounded-full flex-shrink-0 group-hover:scale-125 transition-transform" style={{ background: tool.moduleColor }} />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[12px] font-mono text-primary group-hover:text-primary/90">{tool.name}</div>
+                          <div className="text-[11px] text-muted-foreground truncate">
+                            {t(tool.descEn, tool.descZh)}
+                          </div>
                         </div>
-                      </div>
-                      <span className="text-[10px] px-2.5 py-1 rounded-[8px] bg-card border border-border/40 text-muted-foreground flex-shrink-0">
-                        {tool.module}
-                      </span>
-                    </button>
-                  ))}
+                        <span className="text-[10px] px-2.5 py-1 rounded-[8px] border text-muted-foreground flex-shrink-0" style={{ borderColor: `${tool.moduleColor}30`, background: `${tool.moduleColor}08` }}>
+                          {tool.module}
+                        </span>
+                        <ArrowRight className="w-3 h-3 text-muted-foreground/30 group-hover:text-primary/60 transition-colors flex-shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                  {totalMatched > 8 && (
+                    <div className="px-5 py-2.5 border-t border-border/30 text-center">
+                      <button
+                        onMouseDown={() => setLocation(`/agent-trade-kit?search=${encodeURIComponent(searchQuery)}`)}
+                        className="text-[11px] text-primary/70 hover:text-primary font-[500] transition-colors"
+                      >
+                        {t(`View all ${totalMatched} matched tools →`, `查看全部 ${totalMatched} 个匹配工具 →`)}
+                      </button>
+                    </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
