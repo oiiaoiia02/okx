@@ -109,14 +109,14 @@ export default function DynamicIsland() {
   if (dismissed) return null;
 
   return (
-    <div className="fixed top-[78px] right-5 z-[60] pointer-events-auto">
+    <div className="fixed bottom-6 right-6 z-[60] pointer-events-auto">
       <AnimatePresence>
         {current && (
           <motion.div
             layout
-            initial={{ opacity: 0, y: -12, scale: 0.9 }}
+            initial={{ opacity: 0, y: 16, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -12, scale: 0.9 }}
+            exit={{ opacity: 0, y: 16, scale: 0.9 }}
             transition={{ type: "spring", stiffness: 500, damping: 35 }}
             className="relative overflow-hidden cursor-pointer"
             onClick={() => setExpanded(!expanded)}
