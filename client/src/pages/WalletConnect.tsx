@@ -134,16 +134,16 @@ export default function WalletConnect() {
   const usdValue = balNum * ethPrice;
 
   return (
-    <div className="min-h-screen py-8 px-4">
+    <div className="min-h-screen py-14 px-4">
       <div className="container max-w-2xl">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
             <Wallet className="w-4 h-4" />
             <span>{t("Core Integration", "核心集成")}</span>
             <ChevronRight className="w-3 h-3" />
             <span className="text-foreground">{t("Wallet Connect", "钱包连接")}</span>
           </div>
-          <h1 className="text-3xl font-bold mb-2">{t("OKX Wallet Connection", "OKX 钱包连接")}</h1>
+          <h1 className="text-3xl font-[800] tracking-tight mb-3">{t("OKX Wallet Connection", "OKX 钱包连接")}</h1>
           <p className="text-muted-foreground">
             {t(
               "Connect your OKX Wallet to view real-time balances, USD value, and interact with on-chain data.",
@@ -153,7 +153,7 @@ export default function WalletConnect() {
         </motion.div>
 
         {/* Security Notice */}
-        <div className="glass-card p-4 mb-6 flex items-start gap-3 border-l-2 border-primary">
+        <div className="glass-card p-5 mb-8 flex items-start gap-3 border-l-2 border-primary">
           <Shield className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-medium mb-1">{t("Security First", "安全第一")}</p>
