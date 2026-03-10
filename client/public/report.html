@@ -207,6 +207,12 @@
     margin-bottom: 1.5rem;
   }
 
+  .chart-wrapper {
+    position: relative;
+    height: 280px;
+    width: 100%;
+  }
+
   .chart-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -501,12 +507,12 @@
       <div class="chart-container">
         <h3 class="chart-title">BTC-USDT Price (7D)</h3>
         <p class="chart-subtitle">Data from OKX V5 /market/candles API</p>
-        <canvas id="btcChart" height="220"></canvas>
+        <div class="chart-wrapper"><canvas id="btcChart"></canvas></div>
       </div>
       <div class="chart-container">
         <h3 class="chart-title">ETH-USDT Price (7D)</h3>
         <p class="chart-subtitle">Data from OKX V5 /market/candles API</p>
-        <canvas id="ethChart" height="220"></canvas>
+        <div class="chart-wrapper"><canvas id="ethChart"></canvas></div>
       </div>
     </div>
   </div>
@@ -531,12 +537,12 @@
       <div class="chart-container">
         <h3 class="chart-title">Tools Distribution by Module</h3>
         <p class="chart-subtitle">83 tools across 7 modules</p>
-        <canvas id="moduleChart" height="280"></canvas>
+        <div class="chart-wrapper" style="height:300px"><canvas id="moduleChart"></canvas></div>
       </div>
       <div class="chart-container">
         <h3 class="chart-title">Feature Coverage</h3>
         <p class="chart-subtitle">Radar chart of platform capabilities</p>
-        <canvas id="radarChart" height="280"></canvas>
+        <div class="chart-wrapper" style="height:300px"><canvas id="radarChart"></canvas></div>
       </div>
     </div>
   </div>
@@ -580,7 +586,7 @@
     <div class="chart-container" style="margin-top:1.5rem">
       <h3 class="chart-title">Agent Trade Kit Modules</h3>
       <p class="chart-subtitle">7 modules with complete trading lifecycle coverage</p>
-      <canvas id="moduleBarChart" height="200"></canvas>
+      <div class="chart-wrapper" style="height:250px"><canvas id="moduleBarChart"></canvas></div>
     </div>
   </div>
 </section>
@@ -655,7 +661,7 @@
     <h2 class="section-title">Technology Overview</h2>
     <p class="section-desc">项目使用的核心技术栈。</p>
     <div class="chart-container">
-      <canvas id="techChart" height="250"></canvas>
+      <div class="chart-wrapper" style="height:320px"><canvas id="techChart"></canvas></div>
     </div>
   </div>
 </section>
