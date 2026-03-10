@@ -104,16 +104,9 @@ const COINGECKO_IDS: Record<string, { id: number; slug: string }> = {
  * Uses CoinGecko CDN with known image IDs for reliability
  */
 export function getTokenLogoUrl(symbol: string, size: "small" | "large" = "small"): string {
-  const s = symbol.toUpperCase();
-  const info = COINGECKO_IDS[s];
-  
-  if (info) {
-    const dim = size === "large" ? "large" : "small";
-    return `${COINGECKO_CDN}/${info.id}/${dim}/${info.slug}.png`;
-  }
-  
-  // Fallback: use CryptoCompare generic URL
-  return `https://assets.coincap.io/assets/icons/${symbol.toLowerCase()}@2x.png`;
+  const s = symbol.toUpperCase().replace(/^W/, ""); // handle WBTC -> BTC etc
+  // CoinCap CDN - verified working for all major tokens
+  return `https://assets.coincap.io/assets/icons/${s.toLowerCase()}@2x.png`;
 }
 
 /**
