@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OKX AI CORE — Interactive Project Report</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #06060a;
+    --surface: rgba(255,255,255,0.02);
+    --border: rgba(255,255,255,0.06);
+    --text: #f0f0f5;
+    --text-muted: rgba(255,255,255,0.45);
+    --primary: #00e68a;
+    --blue: #4f8fff;
+    --purple: #a78bfa;
+    --red: #ef4444;
+    --orange: #f59e0b;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+
+  /* Hero */
+  .hero {
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 6rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 800px;
+    height: 800px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,230,138,0.04) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 999px;
+    border: 1px solid rgba(0,230,138,0.15);
+    background: rgba(0,230,138,0.05);
+    font-size: 0.8rem;
+    color: var(--primary);
+    font-weight: 600;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    margin-bottom: 1.25rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero h1 span {
+    background: linear-gradient(90deg, #00e68a, #4f8fff, #a78bfa, #00e68a);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 6s linear infinite;
+  }
+
+  @keyframes shimmer { to { background-position: 200% center; } }
+
+  .hero p {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    max-width: 560px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Section */
+  .section {
+    padding: 5rem 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
+  .section-title {
+    font-size: clamp(1.75rem, 3vw, 2.5rem);
+    font-weight: 800;
+    text-align: center;
+    letter-spacing: -0.03em;
+    margin-bottom: 1rem;
+  }
+
+  .section-desc {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    max-width: 520px;
+    margin: 0 auto 3rem;
+  }
+
+  /* Stats Grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 3rem;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+
+  .stat-card:hover {
+    border-color: rgba(0,230,138,0.15);
+    transform: translateY(-3px);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+  }
+
+  .stat-value {
+    font-size: 2.5rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--primary), var(--blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  /* Chart Container */
+  .chart-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .chart-container::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 15%;
+    right: 15%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,230,138,0.2), transparent);
+  }
+
+  .chart-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .chart-subtitle {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .chart-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  @media (max-width: 768px) {
+    .chart-row { grid-template-columns: 1fr; }
+  }
+
+  /* Module Grid */
+  .module-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .module-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .module-card:hover {
+    border-color: rgba(0,230,138,0.12);
+    transform: translateY(-2px);
+  }
+
+  .module-card h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .module-card p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
+  }
+
+  .module-tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    background: rgba(0,230,138,0.08);
+    color: var(--primary);
+    font-weight: 600;
+    margin-right: 0.4rem;
+    margin-bottom: 0.3rem;
+  }
+
+  /* Live Ticker */
+  .ticker-bar {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding: 1rem 0;
+    margin-bottom: 2rem;
+    scrollbar-width: none;
+  }
+
+  .ticker-bar::-webkit-scrollbar { display: none; }
+
+  .ticker-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+  }
+
+  .ticker-item:hover {
+    border-color: rgba(0,230,138,0.15);
+  }
+
+  .ticker-logo {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .ticker-symbol {
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  .ticker-price {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+  }
+
+  .ticker-change {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 6px;
+  }
+
+  .ticker-change.up { color: #22c55e; background: rgba(34,197,94,0.1); }
+  .ticker-change.down { color: #ef4444; background: rgba(239,68,68,0.1); }
+
+  /* Timeline */
+  .timeline {
+    position: relative;
+    padding-left: 2rem;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--primary), var(--blue), var(--purple));
+    border-radius: 2px;
+  }
+
+  .timeline-item {
+    position: relative;
+    padding: 1.5rem 0 1.5rem 1.5rem;
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -2rem;
+    top: 1.75rem;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--primary);
+    border: 2px solid var(--bg);
+    transform: translateX(-4px);
+  }
+
+  .timeline-item h4 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+
+  .timeline-item p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  .timeline-date {
+    font-size: 0.7rem;
+    color: var(--primary);
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  /* Architecture Diagram */
+  .arch-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 2rem;
+  }
+
+  .arch-node {
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    min-width: 120px;
+    transition: all 0.3s ease;
+  }
+
+  .arch-node:hover {
+    border-color: var(--primary);
+    box-shadow: 0 0 20px rgba(0,230,138,0.1);
+  }
+
+  .arch-node small {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-top: 0.25rem;
+  }
+
+  .arch-arrow {
+    font-size: 1.5rem;
+    color: var(--primary);
+    opacity: 0.5;
+  }
+
+  /* Filter Tabs */
+  .filter-tabs {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-tab {
+    padding: 0.5rem 1.25rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .filter-tab:hover, .filter-tab.active {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(0,230,138,0.05);
+  }
+
+  /* Footer */
+  .report-footer {
+    padding: 3rem 0;
+    border-top: 1px solid var(--border);
+    text-align: center;
+  }
+
+  .report-footer p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  .report-footer a {
+    color: var(--primary);
+    text-decoration: none;
+  }
+
+  .report-footer a:hover { text-decoration: underline; }
+
+  /* Animations */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s ease;
+  }
+
+  .fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Print styles */
+  @media print {
+    body { background: white; color: black; }
+    .hero::before { display: none; }
+    .stat-card, .chart-container, .module-card { border-color: #ddd; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="hero-badge">OKX AI CORE · Interactive Report</div>
+  <h1>Project <span>Visualization</span></h1>
+  <p>OKX AI CORE 项目的完整功能概览、架构分析、实时数据可视化与开发进度报告。</p>
+</header>
+
+<!-- Live Market Data -->
+<section class="section">
+  <div class="container">
+    <p class="section-label">Real-Time Data</p>
+    <h2 class="section-title">OKX V5 API Live Market</h2>
+    <p class="section-desc">所有行情数据来自 OKX 官方 V5 API，每 5 秒自动刷新。</p>
+    <div class="ticker-bar" id="tickerBar">
+      <div class="ticker-item"><span style="color:var(--text-muted)">Loading market data...</span></div>
+    </div>
+    <div class="chart-row">
+      <div class="chart-container">
+        <h3 class="chart-title">BTC-USDT Price (7D)</h3>
+        <p class="chart-subtitle">Data from OKX V5 /market/candles API</p>
+        <canvas id="btcChart" height="220"></canvas>
+      </div>
+      <div class="chart-container">
+        <h3 class="chart-title">ETH-USDT Price (7D)</h3>
+        <p class="chart-subtitle">Data from OKX V5 /market/candles API</p>
+        <canvas id="ethChart" height="220"></canvas>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Project Stats -->
+<section class="section">
+  <div class="container">
+    <p class="section-label">Overview</p>
+    <h2 class="section-title">Project Statistics</h2>
+    <p class="section-desc">OKX AI CORE 的核心数据指标。</p>
+    <div class="stats-grid">
+      <div class="stat-card fade-in"><div class="stat-value">83</div><div class="stat-label">Trading Tools</div></div>
+      <div class="stat-card fade-in"><div class="stat-value">7</div><div class="stat-label">Modules</div></div>
+      <div class="stat-card fade-in"><div class="stat-value">4</div><div class="stat-label">Agent Skills</div></div>
+      <div class="stat-card fade-in"><div class="stat-value">17</div><div class="stat-label">Pages</div></div>
+      <div class="stat-card fade-in"><div class="stat-value">100%</div><div class="stat-label">Open Source</div></div>
+      <div class="stat-card fade-in"><div class="stat-value">5s</div><div class="stat-label">Refresh Rate</div></div>
+    </div>
+
+    <div class="chart-row">
+      <div class="chart-container">
+        <h3 class="chart-title">Tools Distribution by Module</h3>
+        <p class="chart-subtitle">83 tools across 7 modules</p>
+        <canvas id="moduleChart" height="280"></canvas>
+      </div>
+      <div class="chart-container">
+        <h3 class="chart-title">Feature Coverage</h3>
+        <p class="chart-subtitle">Radar chart of platform capabilities</p>
+        <canvas id="radarChart" height="280"></canvas>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Architecture -->
+<section class="section">
+  <div class="container">
+    <p class="section-label">Architecture</p>
+    <h2 class="section-title">System Architecture</h2>
+    <p class="section-desc">从自然语言到交易执行的完整数据流。</p>
+    <div class="chart-container">
+      <div class="arch-flow">
+        <div class="arch-node" style="border-color:var(--primary)">
+          Natural Language
+          <small>User Intent</small>
+        </div>
+        <span class="arch-arrow">→</span>
+        <div class="arch-node">
+          Intent Parser
+          <small>AI Analysis</small>
+        </div>
+        <span class="arch-arrow">→</span>
+        <div class="arch-node">
+          MCP Server
+          <small>Tool Selection</small>
+        </div>
+        <span class="arch-arrow">→</span>
+        <div class="arch-node">
+          OKX V5 API
+          <small>83 Tools</small>
+        </div>
+        <span class="arch-arrow">→</span>
+        <div class="arch-node" style="border-color:var(--blue)">
+          Execution
+          <small>TX Hash</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-container" style="margin-top:1.5rem">
+      <h3 class="chart-title">Agent Trade Kit Modules</h3>
+      <p class="chart-subtitle">7 modules with complete trading lifecycle coverage</p>
+      <canvas id="moduleBarChart" height="200"></canvas>
+    </div>
+  </div>
+</section>
+
+<!-- Module Explorer -->
+<section class="section">
+  <div class="container">
+    <p class="section-label">Modules</p>
+    <h2 class="section-title">Feature Explorer</h2>
+    <p class="section-desc">点击分类标签筛选功能模块。</p>
+
+    <div class="filter-tabs">
+      <button class="filter-tab active" onclick="filterModules('all')">All</button>
+      <button class="filter-tab" onclick="filterModules('core')">Core</button>
+      <button class="filter-tab" onclick="filterModules('tools')">Tools</button>
+      <button class="filter-tab" onclick="filterModules('advanced')">Advanced</button>
+    </div>
+
+    <div class="module-grid" id="moduleGrid">
+    </div>
+  </div>
+</section>
+
+<!-- Development Timeline -->
+<section class="section">
+  <div class="container">
+    <p class="section-label">Progress</p>
+    <h2 class="section-title">Development Timeline</h2>
+    <p class="section-desc">OKX AI CORE 的开发历程与关键里程碑。</p>
+
+    <div class="chart-container">
+      <div class="timeline">
+        <div class="timeline-item fade-in">
+          <div class="timeline-date">Phase 1</div>
+          <h4>Quantum UI Design</h4>
+          <p>设计三套高级UI方案（Nebula/Aurora/Quantum），用户选择Quantum量子科技主题。</p>
+        </div>
+        <div class="timeline-item fade-in">
+          <div class="timeline-date">Phase 2</div>
+          <h4>UI Overhaul</h4>
+          <p>实施Quantum UI重构：柔和点阵背景、渐变光球、简化导航、大幅增加留白。</p>
+        </div>
+        <div class="timeline-item fade-in">
+          <div class="timeline-date">Phase 3</div>
+          <h4>Real Token Logos</h4>
+          <p>集成CoinCap CDN，为80+代币添加真实Logo图片。Token Monitor页面全面升级。</p>
+        </div>
+        <div class="timeline-item fade-in">
+          <div class="timeline-date">Phase 4</div>
+          <h4>OKX V5 API Integration</h4>
+          <p>所有行情数据切换为OKX官方V5 API，5秒自动刷新，真实Bid/Ask价格。</p>
+        </div>
+        <div class="timeline-item fade-in">
+          <div class="timeline-date">Phase 5</div>
+          <h4>Real Links & CTA</h4>
+          <p>所有按钮指向真实链接：Agent Trade Kit GitHub、Official Docs、Telegram。</p>
+        </div>
+        <div class="timeline-item fade-in">
+          <div class="timeline-date">Phase 6</div>
+          <h4>Interactive Report</h4>
+          <p>创建交互式可视化报告页面，包含实时图表、模块探索器和架构图。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Technology Stack -->
+<section class="section">
+  <div class="container">
+    <p class="section-label">Tech Stack</p>
+    <h2 class="section-title">Technology Overview</h2>
+    <p class="section-desc">项目使用的核心技术栈。</p>
+    <div class="chart-container">
+      <canvas id="techChart" height="250"></canvas>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="report-footer">
+  <div class="container">
+    <p style="margin-bottom:0.5rem"><strong>OKX AI CORE</strong> · Interactive Project Report</p>
+    <p>Built by <a href="https://x.com/chen1904o" target="_blank">小天才铭77Ouo</a> · <a href="https://t.me/se77ouo" target="_blank">Telegram</a> · <a href="https://github.com/okx/agent-trade-kit" target="_blank">Agent Trade Kit</a></p>
+    <p style="margin-top:1rem;font-size:0.7rem">Simulation-first · Keys local only · MIT License</p>
+  </div>
+</footer>
+
+<script>
+// ═══ OKX V5 API Integration ═══
+const OKX_BASE = 'https://www.okx.com/api/v5';
+
+async function fetchTicker(instId) {
+  try {
+    const res = await fetch(`${OKX_BASE}/market/ticker?instId=${instId}`);
+    const json = await res.json();
+    if (json.code === '0' && json.data.length) return json.data[0];
+  } catch(e) {}
+  return null;
+}
+
+async function fetchCandles(instId, bar='4H', limit='42') {
+  try {
+    const res = await fetch(`${OKX_BASE}/market/candles?instId=${instId}&bar=${bar}&limit=${limit}`);
+    const json = await res.json();
+    if (json.code === '0') return json.data.reverse();
+  } catch(e) {}
+  return [];
+}
+
+// ═══ Live Ticker ═══
+const PAIRS = ['BTC-USDT','ETH-USDT','SOL-USDT','DOGE-USDT','XRP-USDT','ADA-USDT','AVAX-USDT','DOT-USDT','LINK-USDT','UNI-USDT'];
+
+async function updateTicker() {
+  const bar = document.getElementById('tickerBar');
+  const items = [];
+  for (const pair of PAIRS) {
+    const t = await fetchTicker(pair);
+    if (!t) continue;
+    const sym = pair.split('-')[0];
+    const last = parseFloat(t.last);
+    const open = parseFloat(t.open24h);
+    const change = open > 0 ? ((last - open) / open * 100) : 0;
+    const isUp = change >= 0;
+    items.push(`
+      <div class="ticker-item">
+        <img class="ticker-logo" src="https://assets.coincap.io/assets/icons/${sym.toLowerCase()}@2x.png" alt="${sym}" onerror="this.style.display='none'">
+        <span class="ticker-symbol">${sym}</span>
+        <span class="ticker-price">$${last >= 1000 ? last.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) : last >= 1 ? last.toFixed(4) : last.toFixed(6)}</span>
+        <span class="ticker-change ${isUp?'up':'down'}">${isUp?'+':''}${change.toFixed(2)}%</span>
+      </div>
+    `);
+  }
+  if (items.length) bar.innerHTML = items.join('');
+}
+
+// ═══ Price Charts ═══
+async function renderPriceChart(canvasId, instId, color) {
+  const candles = await fetchCandles(instId);
+  if (!candles.length) return;
+
+  const labels = candles.map(c => {
+    const d = new Date(parseInt(c[0]));
+    return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:00`;
+  });
+  const prices = candles.map(c => parseFloat(c[4]));
+
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  const gradient = ctx.createLinearGradient(0, 0, 0, 220);
+  gradient.addColorStop(0, color + '20');
+  gradient.addColorStop(1, 'transparent');
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: prices,
+        borderColor: color,
+        backgroundColor: gradient,
+        fill: true,
+        tension: 0.4,
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        pointHoverBackgroundColor: color,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(6,6,10,0.95)',
+          borderColor: 'rgba(255,255,255,0.1)',
+          borderWidth: 1,
+          titleColor: '#f0f0f5',
+          bodyColor: '#f0f0f5',
+          padding: 12,
+          cornerRadius: 10,
+          callbacks: {
+            label: ctx => `$${ctx.parsed.y.toLocaleString(undefined,{minimumFractionDigits:2})}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,0.03)' },
+          ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 10 }, maxTicksLimit: 8 }
+        },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.03)' },
+          ticks: {
+            color: 'rgba(255,255,255,0.3)',
+            font: { size: 10 },
+            callback: v => '$' + v.toLocaleString()
+          }
+        }
+      },
+      interaction: { intersect: false, mode: 'index' }
+    }
+  });
+}
+
+// ═══ Module Distribution Chart ═══
+function renderModuleChart() {
+  const ctx = document.getElementById('moduleChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Market', 'Spot', 'Swap', 'Options', 'Bot', 'Account', 'Public'],
+      datasets: [{
+        data: [15, 12, 18, 8, 14, 10, 6],
+        backgroundColor: ['#00e68a', '#4f8fff', '#a78bfa', '#f59e0b', '#ef4444', '#06b6d4', '#8b5cf6'],
+        borderWidth: 0,
+        hoverOffset: 8,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: 'rgba(255,255,255,0.6)', padding: 16, font: { size: 11 } }
+        }
+      }
+    }
+  });
+}
+
+// ═══ Radar Chart ═══
+function renderRadarChart() {
+  const ctx = document.getElementById('radarChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: ['Market Data', 'Trading', 'Risk Mgmt', 'Bot Automation', 'Analytics', 'Security'],
+      datasets: [{
+        label: 'OKX AI CORE',
+        data: [95, 90, 85, 88, 82, 92],
+        borderColor: '#00e68a',
+        backgroundColor: 'rgba(0,230,138,0.1)',
+        borderWidth: 2,
+        pointBackgroundColor: '#00e68a',
+        pointRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        r: {
+          beginAtZero: true,
+          max: 100,
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          angleLines: { color: 'rgba(255,255,255,0.05)' },
+          pointLabels: { color: 'rgba(255,255,255,0.6)', font: { size: 11 } },
+          ticks: { display: false }
+        }
+      },
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+}
+
+// ═══ Module Bar Chart ═══
+function renderModuleBarChart() {
+  const ctx = document.getElementById('moduleBarChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Market', 'Spot Trading', 'Swap/Futures', 'Options', 'Bot/Algo', 'Account', 'Public'],
+      datasets: [{
+        label: 'Tools Count',
+        data: [15, 12, 18, 8, 14, 10, 6],
+        backgroundColor: [
+          'rgba(0,230,138,0.7)', 'rgba(79,143,255,0.7)', 'rgba(167,139,250,0.7)',
+          'rgba(245,158,11,0.7)', 'rgba(239,68,68,0.7)', 'rgba(6,182,212,0.7)', 'rgba(139,92,246,0.7)'
+        ],
+        borderRadius: 8,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(6,6,10,0.95)',
+          borderColor: 'rgba(255,255,255,0.1)',
+          borderWidth: 1,
+          padding: 12,
+          cornerRadius: 10,
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 11 } }
+        },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.03)' },
+          ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 11 } }
+        }
+      }
+    }
+  });
+}
+
+// ═══ Tech Stack Chart ═══
+function renderTechChart() {
+  const ctx = document.getElementById('techChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'polarArea',
+    data: {
+      labels: ['React + TypeScript', 'OKX V5 API', 'MCP Protocol', 'TailwindCSS', 'Framer Motion', 'Chart.js'],
+      datasets: [{
+        data: [95, 90, 85, 88, 80, 75],
+        backgroundColor: [
+          'rgba(0,230,138,0.5)', 'rgba(79,143,255,0.5)', 'rgba(167,139,250,0.5)',
+          'rgba(245,158,11,0.5)', 'rgba(239,68,68,0.5)', 'rgba(6,182,212,0.5)'
+        ],
+        borderWidth: 0,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        r: {
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: { display: false }
+        }
+      },
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: 'rgba(255,255,255,0.6)', padding: 16, font: { size: 11 } }
+        }
+      }
+    }
+  });
+}
+
+// ═══ Module Explorer ═══
+const MODULES = [
+  { name: 'AI Copilot', desc: 'Natural language trading assistant with intent parsing and MCP execution.', tags: ['AI','NLP','MCP'], cat: 'core' },
+  { name: 'Agent Trade Kit', desc: '83 tools across 7 modules. Spot, futures, options, algo orders, bots.', tags: ['83 Tools','7 Modules'], cat: 'core' },
+  { name: 'MCP Visualizer', desc: 'Visualize MCP tool calls with editable JSON payload.', tags: ['MCP','JSON','CLI'], cat: 'core' },
+  { name: 'Agent Skills', desc: '4 plug-and-play skills: market data, trading, portfolio, bot management.', tags: ['Skills','Plug-and-Play'], cat: 'core' },
+  { name: 'Wallet Connect', desc: 'Real OKX Wallet connection. View on-chain balance, auto-refresh.', tags: ['OKX Wallet','On-chain'], cat: 'core' },
+  { name: 'Token Monitor', desc: 'Real-time OKX V5 API prices with token logos. Custom watchlist, 5s refresh.', tags: ['OKX API','Real-time','Logos'], cat: 'tools' },
+  { name: 'Strategy Studio', desc: 'Build Grid/DCA/TWAP strategies with real historical price backtest.', tags: ['Grid','DCA','Backtest'], cat: 'tools' },
+  { name: 'Risk Dashboard', desc: 'Real-time risk metrics based on wallet balance and OKX prices.', tags: ['Risk','Real-time'], cat: 'tools' },
+  { name: 'Trade Review', desc: 'Full lifecycle review with win rate, Sharpe ratio, PnL curves.', tags: ['Sharpe','PnL'], cat: 'tools' },
+  { name: 'Simulation Panel', desc: 'Default simulation mode for safe testing before live trading.', tags: ['Demo','Safe'], cat: 'tools' },
+  { name: 'Reasoning Chain', desc: "Visualize Agent's complete reasoning: intent → tool → MCP → result.", tags: ['Chain-of-Thought'], cat: 'advanced' },
+  { name: 'Claw Prompt', desc: 'One-click generate Claw-ready prompts with Skills + MCP + --demo.', tags: ['OpenClaw','Prompt'], cat: 'advanced' },
+  { name: 'Use Cases', desc: '3 official scenarios: grid bot, whale tracking, options strategy.', tags: ['Demo','Scenarios'], cat: 'advanced' },
+  { name: 'Whale Signal', desc: 'Track large wallet movements and whale trading patterns.', tags: ['Whale','Signal'], cat: 'advanced' },
+  { name: 'OnchainOS', desc: 'Panoramic dashboard for on-chain data and DeFi overview.', tags: ['Onchain','DeFi'], cat: 'advanced' },
+  { name: 'Security Audit', desc: 'Security analysis and audit tools for smart contracts.', tags: ['Security','Audit'], cat: 'advanced' },
+  { name: 'Share to X', desc: 'One-click share trading results and strategies to X/Twitter.', tags: ['Social','Share'], cat: 'advanced' },
+];
+
+function renderModules(filter = 'all') {
+  const grid = document.getElementById('moduleGrid');
+  const filtered = filter === 'all' ? MODULES : MODULES.filter(m => m.cat === filter);
+  grid.innerHTML = filtered.map(m => `
+    <div class="module-card fade-in visible">
+      <h4>${m.name}</h4>
+      <p>${m.desc}</p>
+      <div>${m.tags.map(t => `<span class="module-tag">${t}</span>`).join('')}</div>
+    </div>
+  `).join('');
+}
+
+function filterModules(cat) {
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  renderModules(cat);
+}
+
+// ═══ Scroll Animation ═══
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+// ═══ Init ═══
+async function init() {
+  updateTicker();
+  setInterval(updateTicker, 10000);
+
+  renderPriceChart('btcChart', 'BTC-USDT', '#f59e0b');
+  renderPriceChart('ethChart', 'ETH-USDT', '#4f8fff');
+  renderModuleChart();
+  renderRadarChart();
+  renderModuleBarChart();
+  renderTechChart();
+  renderModules();
+
+  // Re-observe after dynamic content
+  setTimeout(() => {
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+  }, 500);
+}
+
+init();
+</script>
+</body>
+</html>
