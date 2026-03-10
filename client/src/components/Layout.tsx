@@ -63,18 +63,18 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Top Navigation — Quantum Style */}
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/40">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/30">
         <div
           className="absolute inset-0"
           style={{
             background: theme === "dark"
-              ? "rgba(6, 6, 10, 0.65)"
+              ? "rgba(6, 6, 10, 0.6)"
               : "rgba(255, 255, 255, 0.7)",
-            backdropFilter: "blur(24px)",
-            WebkitBackdropFilter: "blur(24px)",
+            backdropFilter: "blur(32px) saturate(1.3)",
+            WebkitBackdropFilter: "blur(32px) saturate(1.3)",
           }}
         />
-        <nav className="relative container flex items-center justify-between h-[68px]">
+        <nav className="relative container flex items-center justify-between h-[72px]">
           {/* Logo — OKX icon + "OKX AI CORE" only, ultra-minimal */}
           <Link href="/" className="flex items-center gap-3 group">
             <div className="w-[32px] h-[32px] rounded-[9px] overflow-hidden flex items-center justify-center border border-border/20 group-hover:border-primary/30 transition-colors">
@@ -231,7 +231,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       </AnimatePresence>
 
       {/* Main Content */}
-      <main className="pt-[68px]">
+      <main className="pt-[72px]">
         <AnimatePresence mode="wait">
           <motion.div
             key={location}
@@ -246,7 +246,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       </main>
 
       {/* Footer — Quantum Style */}
-      <footer className="border-t border-border/40 py-10 mt-20">
+      <footer className="border-t border-border/30 py-12 mt-24">
         <div className="container">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-5">
             <div className="flex items-center gap-3 text-[13px] text-muted-foreground flex-wrap justify-center">

@@ -294,12 +294,12 @@ function FeatureCard({ icon: Icon, title, desc, href, tags, delay }: {
       transition={{ duration: 0.4, delay }}
     >
       <Link href={href}>
-        <div className="group glass-card p-8 h-full">
-          <div className="w-[52px] h-[52px] rounded-[16px] bg-gradient-to-br from-primary/6 to-[rgba(79,143,255,0.03)] border border-primary/8 flex items-center justify-center mb-7 group-hover:border-primary/15 transition-colors">
-            <Icon className="w-[24px] h-[24px] text-primary" />
+        <div className="group glass-card feature-card-hover p-9 h-full">
+          <div className="w-[52px] h-[52px] rounded-[16px] bg-gradient-to-br from-primary/6 to-[rgba(79,143,255,0.03)] border border-primary/8 flex items-center justify-center mb-8 group-hover:border-primary/20 group-hover:shadow-[0_0_24px_rgba(0,230,138,0.08)] transition-all duration-500">
+            <Icon className="w-[24px] h-[24px] text-primary group-hover:scale-110 transition-transform duration-300" />
           </div>
-          <h3 className="font-[700] text-[18px] text-foreground mb-3 group-hover:text-primary transition-colors tracking-[-0.01em]">{title}</h3>
-          <p className="text-[14px] text-muted-foreground leading-[1.75] mb-5">{desc}</p>
+          <h3 className="font-[700] text-[18px] text-foreground mb-3.5 group-hover:text-primary transition-colors duration-300 tracking-[-0.01em]">{title}</h3>
+          <p className="text-[14px] text-muted-foreground leading-[1.8] mb-6">{desc}</p>
           {tags && (
             <div className="flex flex-wrap gap-2">
               {tags.map((tag) => (
@@ -448,7 +448,7 @@ export default function Home() {
   return (
     <div className="relative">
       {/* ═══ Hero Section — Quantum ═══ */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-24 overflow-hidden">
+      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-32 pb-20 overflow-hidden">
         {/* Background */}
         <div className="absolute inset-0 z-0">
           <ParticleBackground />
@@ -465,7 +465,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-3 px-5 py-2 pl-5 pr-2 rounded-full border border-primary/10 bg-primary/3 mb-20"
+            className="inline-flex items-center gap-3 px-5 py-2 pl-5 pr-2 rounded-full border border-primary/10 bg-primary/3 mb-16"
           >
             <span className="text-[13px] font-[500] text-primary">OKX Agent Trade Kit</span>
             <span className="px-3.5 py-1 rounded-full bg-primary/8 text-[11px] font-[700] text-primary tracking-[0.5px]">
@@ -478,7 +478,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-[clamp(48px,7vw,88px)] font-[900] leading-[1] tracking-[-0.05em] mb-10"
+            className="text-[clamp(48px,7vw,88px)] font-[900] leading-[1.05] tracking-[-0.04em] mb-8"
           >
             {t("If you can think it,", "凡你所思，")}
             <br />
@@ -492,7 +492,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-[17px] text-muted-foreground max-w-[520px] mx-auto mb-[72px] leading-[1.8] font-[400]"
+            className="text-[17px] text-muted-foreground max-w-[520px] mx-auto mb-16 leading-[1.8] font-[400]"
           >
             {t(
               "Natural language trading powered by OKX V5 API.",
@@ -665,7 +665,7 @@ export default function Home() {
       </section>
 
       {/* ═══ Terminal Demo ═══ */}
-      <section className="py-[160px] px-6">
+      <section className="py-[180px] px-6">
         <div className="container">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -708,7 +708,7 @@ export default function Home() {
       </section>
 
       {/* ═══ Feature Grid ═══ */}
-      <section className="py-[160px] px-6">
+      <section className="py-[180px] px-6">
         <div className="container max-w-[1280px]">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -729,7 +729,7 @@ export default function Home() {
               )}
             </p>
           </motion.div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-7">
             {features.map((f) => (
               <FeatureCard key={f.href + f.title} {...f} />
             ))}
@@ -764,7 +764,7 @@ export default function Home() {
       </section>
 
       {/* ═══ Get Started ═══ */}
-      <section className="py-[160px] px-6">
+      <section className="py-[180px] px-6">
         <div className="container max-w-[780px]">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

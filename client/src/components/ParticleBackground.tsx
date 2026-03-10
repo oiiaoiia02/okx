@@ -29,9 +29,9 @@ interface Orb {
   phase: number;
 }
 
-const NODE_COUNT = 40;
-const CONNECTION_DIST = 180;
-const ORB_COUNT = 4;
+const NODE_COUNT = 30;
+const CONNECTION_DIST = 160;
+const ORB_COUNT = 3;
 
 const NODE_COLORS = [
   [0, 230, 138],   // primary green
@@ -84,12 +84,12 @@ export default function ParticleBackground() {
         nodes.push({
           x: Math.random() * w,
           y: Math.random() * h,
-          vx: (Math.random() - 0.5) * 0.3,
-          vy: (Math.random() - 0.5) * 0.3,
+          vx: (Math.random() - 0.5) * 0.2,
+          vy: (Math.random() - 0.5) * 0.2,
           r: 1.2 + Math.random() * 1.8,
           phase: Math.random() * Math.PI * 2,
           color: `${NODE_COLORS[colorIdx][0]}, ${NODE_COLORS[colorIdx][1]}, ${NODE_COLORS[colorIdx][2]}`,
-          alpha: 0.15 + Math.random() * 0.2,
+          alpha: 0.1 + Math.random() * 0.15,
         });
       }
 
@@ -238,7 +238,7 @@ export default function ParticleBackground() {
     <canvas
       ref={canvasRef}
       className="absolute inset-0 z-0 pointer-events-none"
-      style={{ opacity: 0.85 }}
+      style={{ opacity: 0.7 }}
     />
   );
 }
