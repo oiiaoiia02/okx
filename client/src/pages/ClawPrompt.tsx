@@ -564,25 +564,66 @@ export default function ClawPrompt() {
           </pre>
         </div>
 
+        {/* Quick Presets */}
+        <div className="mt-6 glass-card p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Zap className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium">{t("Quick Presets", "快速预设")}</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { label: "BTC Market Scan", pair: "BTC-USDT", template: "market_query", amount: "100" },
+              { label: "ETH Smart Buy", pair: "ETH-USDT", template: "trade_execution", amount: "500" },
+              { label: "SOL Grid Bot", pair: "SOL-USDT", template: "grid_bot", amount: "1000" },
+              { label: "Portfolio Audit", pair: "BTC-USDT", template: "portfolio_review", amount: "0" },
+              { label: "BTC DCA $100", pair: "BTC-USDT", template: "dca_strategy", amount: "100" },
+              { label: "ETH Whale Copy", pair: "ETH-USDT", template: "whale_copy", amount: "200" },
+            ].map((preset) => (
+              <button
+                key={preset.label}
+                onClick={() => { setPair(preset.pair); setActiveTemplate(preset.template); setAmount(preset.amount); }}
+                className="px-3 py-1.5 rounded-lg text-[11px] font-medium border border-border/30 text-muted-foreground hover:text-primary hover:border-primary/30 hover:bg-primary/5 transition-all"
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Usage Guide */}
-        <div className="mt-6 p-4 rounded-xl bg-primary/5 border border-primary/10">
-          <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+        <div className="mt-4 p-4 rounded-xl bg-primary/5 border border-primary/10">
+          <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-primary" />
-            {t("How to Use", "使用方法")}
+            {t("How to Use with Claw / OpenClaw", "如何配合 Claw / OpenClaw 使用")}
           </h4>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-muted-foreground">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs text-muted-foreground">
             <div>
-              <p className="font-medium text-foreground mb-1">1. {t("Copy Prompt", "复制Prompt")}</p>
-              <p>{t("Click 'Copy to Claw' to copy the complete prompt with all MCP sequences.", "点击'复制到Claw'复制包含所有MCP序列的完整Prompt。")}</p>
+              <p className="font-medium text-foreground mb-1">1. {t("Generate", "生成")}</p>
+              <p>{t("Select template, configure params, prompt auto-generates.", "选择模板，配置参数，Prompt自动生成。")}</p>
             </div>
             <div>
-              <p className="font-medium text-foreground mb-1">2. {t("Paste to Agent", "粘贴到Agent")}</p>
-              <p>{t("Paste into Claw (Lobster Bot), Claude, or any MCP-compatible agent.", "粘贴到Claw（龙虾Bot）、Claude或任何MCP兼容Agent。")}</p>
+              <p className="font-medium text-foreground mb-1">2. {t("Copy", "复制")}</p>
+              <p>{t("Click 'Copy to Claw' — includes Skills + MCP + Safety.", "点击'复制到Claw' — 包含Skills + MCP + Safety。")}</p>
             </div>
             <div>
-              <p className="font-medium text-foreground mb-1">3. {t("Execute", "执行")}</p>
-              <p>{t("The agent will follow the MCP sequence and execute each step.", "Agent将按照MCP序列逐步执行每个步骤。")}</p>
+              <p className="font-medium text-foreground mb-1">3. {t("Paste & Run", "粘贴运行")}</p>
+              <p>{t("Paste into Claw, Claude, Cursor, or any MCP agent.", "粘贴到Claw、Claude、Cursor或任何MCP Agent。")}</p>
             </div>
+            <div>
+              <p className="font-medium text-foreground mb-1">4. {t("Verify", "验证")}</p>
+              <p>{t("Agent executes MCP sequence, returns TX Hash + results.", "Agent执行MCP序列，返回TX Hash + 结果。")}</p>
+            </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-primary/10 flex items-center gap-3">
+            <a href="https://github.com/okx/agent-trade-kit" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
+              <ExternalLink className="w-3 h-3" />
+              Agent Trade Kit
+            </a>
+            <span className="text-border">|</span>
+            <a href="https://www.okx.com/docs-v5/en/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
+              <ExternalLink className="w-3 h-3" />
+              OKX V5 API Docs
+            </a>
           </div>
         </div>
       </div>
