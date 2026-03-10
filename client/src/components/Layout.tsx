@@ -7,7 +7,7 @@ import {
   Sun, Moon, Globe, Menu, X, Zap, BarChart3, Cpu, Wallet,
   Eye, FlaskConical, Shield, History, Brain, BookOpen, Layers,
   ChevronDown, Terminal, Search, Sparkles, Fish, ShieldCheck,
-  Share2, Monitor,
+  Share2, Monitor, Mic, Bot, MessageSquare,
 } from "lucide-react";
 
 const navGroups = [
@@ -15,6 +15,7 @@ const navGroups = [
     labelEn: "Core",
     labelZh: "核心集成",
     items: [
+      { path: "/copilot", iconName: "Bot", labelEn: "AI Copilot", labelZh: "AI 助手" },
       { path: "/agent-trade-kit", iconName: "Cpu", labelEn: "Agent Trade Kit", labelZh: "Agent Trade Kit" },
       { path: "/mcp-visualizer", iconName: "Terminal", labelEn: "MCP Visualizer", labelZh: "MCP 可视化" },
       { path: "/agent-skills", iconName: "Zap", labelEn: "Agent Skills", labelZh: "Agent Skills" },
@@ -49,7 +50,7 @@ const navGroups = [
 
 const iconMap: Record<string, any> = {
   Cpu, Terminal, Zap, Wallet, Eye, FlaskConical, Shield, History, Brain,
-  BookOpen, Layers, Sparkles, Fish, ShieldCheck, Share2, Monitor,
+  BookOpen, Layers, Sparkles, Fish, ShieldCheck, Share2, Monitor, Mic, Bot, MessageSquare,
 };
 
 export default function Layout({ children }: { children: ReactNode }) {
@@ -79,9 +80,14 @@ export default function Layout({ children }: { children: ReactNode }) {
             <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
               <Zap className="w-4 h-4 text-primary" />
             </div>
-            <span className="font-bold text-lg tracking-tight">
-              Neuro-Link
-            </span>
+            <div className="flex flex-col">
+              <span className="font-extrabold text-sm tracking-tight leading-none">
+                OKX AI CORE
+              </span>
+              <span className="text-[9px] text-muted-foreground tracking-widest uppercase">
+                Agent Trade Terminal
+              </span>
+            </div>
           </Link>
 
           {/* Desktop Nav */}
@@ -246,6 +252,8 @@ export default function Layout({ children }: { children: ReactNode }) {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Zap className="w-4 h-4 text-primary" />
+              <span className="font-bold text-foreground">OKX AI CORE</span>
+              <span className="text-xs">|</span>
               <span>Built by <strong className="text-foreground">小天才铭77Ouo</strong></span>
               <a
                 href="https://x.com/chen1904o"
@@ -255,11 +263,18 @@ export default function Layout({ children }: { children: ReactNode }) {
               >
                 @Chen1904o
               </a>
+              <span className="text-xs">|</span>
+              <a
+                href="https://t.me/se77ouo"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                Telegram
+              </a>
             </div>
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <span>{t("Pure frontend simulation", "纯前端模拟")}</span>
-              <span>•</span>
-              <span>{t("Keys never uploaded", "密钥永不上传")}</span>
+              <span>{t("Simulation-first · Keys local only", "模拟优先 · 密钥本地存储")}</span>
               <span>•</span>
               <span>MIT License</span>
             </div>
