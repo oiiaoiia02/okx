@@ -390,16 +390,16 @@ export default function ClawPrompt() {
   };
 
   return (
-    <div className="min-h-screen py-8 px-4">
+    <div className="min-h-screen py-14 px-4">
       <div className="container max-w-5xl">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
             <Sparkles className="w-4 h-4" />
             <span>{t("Advanced", "高级")}</span>
             <ChevronRight className="w-3 h-3" />
             <span className="text-foreground">{t("Claw Prompt Generator", "Claw Prompt 生成器")}</span>
           </div>
-          <h1 className="text-3xl font-bold mb-2">{t("Claw-Ready Prompt Generator", "Claw-Ready Prompt 生成器")}</h1>
+          <h1 className="text-3xl font-[800] tracking-tight mb-3">{t("Claw-Ready Prompt Generator", "Claw-Ready Prompt 生成器")}</h1>
           <p className="text-muted-foreground">
             {t(
               "Generate complete prompts with Skills + MCP sequences + safety directives. Copy directly to Claw (Lobster Bot) or any MCP-compatible agent.",
