@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import Home from "./pages/Home";
+import Copilot from "./pages/Copilot";
 import AgentTradeKit from "./pages/AgentTradeKit";
 import MCPVisualizer from "./pages/MCPVisualizer";
 import AgentSkills from "./pages/AgentSkills";
@@ -31,6 +32,7 @@ function Router() {
     <Layout>
       <Switch>
         <Route path="/" component={Home} />
+        <Route path="/copilot" component={Copilot} />
         <Route path="/agent-trade-kit" component={AgentTradeKit} />
         <Route path="/mcp-visualizer" component={MCPVisualizer} />
         <Route path="/agent-skills" component={AgentSkills} />
