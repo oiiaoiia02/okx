@@ -2,9 +2,9 @@
 
 > **The most complete, most real OKX Agent Trade Kit frontend terminal.**
 >
-> Apple-grade glassmorphism UI + Natural Language Copilot + Voice Input + Real-time Intent Prediction + Local MCP Real Trading (on-chain TX visible) + Claw Prompt One-click Migration + Whale Signal One-click Execution. Fully local, simulation-first, open-source and reproducible.
+> glassmorphism UI + Natural Language Copilot + Voice Input + Real-time Intent Prediction + Local MCP Real Trading (on-chain TX visible) + Claw Prompt One-click Migration + Whale Signal One-click Execution. Fully local, simulation-first, open-source and reproducible.
 
-> **OKX AI Core 是目前最完整、最真实的 OKX Agent Trade Kit 前端终端：苹果级毛玻璃UI + 自然语言 Copilot + 语音输入 + 实时意图猜测 + 本地 MCP 真实交易（链上 TX 可见）+ Claw Prompt 一键迁移 + 巨鲸跟单一键执行，全程安全本地、模拟优先、可复制开源。**
+> **OKX AI Core 是目前最完整、最真实的 OKX Agent Trade Kit 前端终端： + 自然语言 Copilot + 语音输入 + 实时意图猜测 + 本地 MCP 真实交易（链上 TX 可见）+ Claw Prompt 一键迁移 + 巨鲸跟单一键执行，全程安全本地、模拟优先、可复制开源。**
 
 ---
 
