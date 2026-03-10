@@ -422,7 +422,7 @@ export default function Home() {
   return (
     <div className="relative">
       {/* ═══ Hero Section — Quantum ═══ */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
+      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-24 overflow-hidden">
         {/* Background */}
         <div className="absolute inset-0 z-0">
           <ParticleBackground />
@@ -439,7 +439,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-3 px-5 py-2 pl-5 pr-2 rounded-full border border-primary/10 bg-primary/3 mb-16"
+            className="inline-flex items-center gap-3 px-5 py-2 pl-5 pr-2 rounded-full border border-primary/10 bg-primary/3 mb-20"
           >
             <span className="text-[13px] font-[500] text-primary">OKX Agent Trade Kit</span>
             <span className="px-3.5 py-1 rounded-full bg-primary/8 text-[11px] font-[700] text-primary tracking-[0.5px]">

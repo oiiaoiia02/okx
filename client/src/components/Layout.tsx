@@ -75,16 +75,16 @@ export default function Layout({ children }: { children: ReactNode }) {
           }}
         />
         <nav className="relative container flex items-center justify-between h-[68px]">
-          {/* Logo — OKX icon + "OKX AI CORE" only, no subtitle */}
-          <Link href="/" className="flex items-center gap-3.5 group">
-            <div className="w-[34px] h-[34px] rounded-[10px] overflow-hidden flex items-center justify-center border border-border/30 group-hover:border-primary/30 transition-colors">
+          {/* Logo — OKX icon + "OKX AI CORE" only, ultra-minimal */}
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="w-[32px] h-[32px] rounded-[9px] overflow-hidden flex items-center justify-center border border-border/20 group-hover:border-primary/30 transition-colors">
               <img
                 src="/okx-logo.png"
                 alt="OKX"
                 className="w-full h-full object-cover"
               />
             </div>
-            <span className="font-[800] text-[15px] tracking-[0.8px] bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
+            <span className="font-[800] text-[16px] tracking-[1.2px] text-foreground">
               OKX AI CORE
             </span>
           </Link>
