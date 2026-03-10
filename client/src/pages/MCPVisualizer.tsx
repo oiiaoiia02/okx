@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Terminal, Copy, Check, Play, ArrowRight, ChevronRight, Send, Activity, Loader2 } from "lucide-react";
+import { Terminal, Copy, Check, Play, ArrowRight, ChevronRight, Send, Activity, Loader2, Wifi, WifiOff, ExternalLink, AlertTriangle } from "lucide-react";
 import { getTicker, getOrderbook, getCandles, getFundingRate } from "@/services/okxApi";
+import { connectMCPServer, disconnectMCPServer, getConnectionStatus, onConnectionStatusChange, executeMCPTool, getExplorerUrl, type ConnectionStatus } from "@/services/mcpService";
 
 interface FlowStep {
   tool: string;
@@ -86,6 +87,21 @@ export default function MCPVisualizer() {
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [liveResults, setLiveResults] = useState<Record<string, any>>({});
   const [executing, setExecuting] = useState<Record<string, boolean>>({});
+  const [mcpStatus, setMcpStatus] = useState<ConnectionStatus>(getConnectionStatus());
+  const [mcpUrl, setMcpUrl] = useState("ws://localhost:8765");
+  const [txHashes, setTxHashes] = useState<Record<string, { hash: string; url: string }>>({});
+
+  useEffect(() => {
+    return onConnectionStatusChange(setMcpStatus);
+  }, []);
+
+  const handleMCPConnect = async () => {
+    if (mcpStatus === "connected") {
+      disconnectMCPServer();
+    } else {
+      await connectMCPServer(mcpUrl);
+    }
+  };
 
   const flow = EXAMPLE_FLOWS[activeFlow];
 
@@ -99,8 +115,21 @@ export default function MCPVisualizer() {
     const step = flow.steps[stepIdx];
     const key = `${activeFlow}-${stepIdx}`;
     const handler = LIVE_API_MAP[step.tool];
+    
+    // If no direct API handler, try MCP Server or simulation
     if (!handler) {
-      setLiveResults((prev) => ({ ...prev, [key]: { status: "requires_mcp_server", note: "This tool requires a local MCP Server connection (ws://localhost:8765). Use the Copilot page or connect your MCP server." } }));
+      setExecuting((prev) => ({ ...prev, [key]: true }));
+      try {
+        const mode = mcpStatus === "connected" ? "live" : "demo";
+        const response = await executeMCPTool({ tool: step.tool, params: step.params, mode });
+        setLiveResults((prev) => ({ ...prev, [key]: response.data }));
+        if (response.txHash) {
+          setTxHashes((prev) => ({ ...prev, [key]: { hash: response.txHash!, url: response.explorerUrl || getExplorerUrl(response.txHash!) } }));
+        }
+      } catch (err: any) {
+        setLiveResults((prev) => ({ ...prev, [key]: { error: err.message } }));
+      }
+      setExecuting((prev) => ({ ...prev, [key]: false }));
       return;
     }
     setExecuting((prev) => ({ ...prev, [key]: true }));
@@ -120,19 +149,59 @@ export default function MCPVisualizer() {
   };
 
   return (
-    <div className="min-h-screen py-8 px-4">
+    <div className="min-h-screen py-14 px-4">
       <div className="container">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
             <Terminal className="w-4 h-4" />
             <span>{t("Core Integration", "核心集成")}</span>
             <ChevronRight className="w-3 h-3" />
             <span className="text-foreground">MCP Visualizer</span>
           </div>
-          <h1 className="text-3xl font-bold mb-2">{t("MCP Tool Call Visualizer", "MCP 工具调用可视化")}</h1>
+          <h1 className="text-3xl font-[800] tracking-tight mb-3">{t("MCP Tool Call Visualizer", "MCP 工具调用可视化")}</h1>
           <p className="text-muted-foreground">
-            {t("Visualize MCP tool call flows. Market tools execute against real OKX API.", "可视化MCP工具调用流程。行情工具直接调用OKX真实API。")}
+            {t("Visualize MCP tool call flows. Market tools execute against real OKX API. Trade tools use MCP Server or simulation.", "可视化MCP工具调用流程。行情工具直接调用OKX真实API。交易工具使用MCP Server或模拟执行。")}
           </p>
+        </motion.div>
+
+        {/* MCP Server Connection Panel */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+          className="glass-card p-5 mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {mcpStatus === "connected" ? (
+                <div className="flex items-center gap-2">
+                  <Wifi className="w-4 h-4 text-green-400" />
+                  <span className="text-sm font-medium text-green-400">{t("MCP Connected", "MCP 已连接")}</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">LIVE</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <WifiOff className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">{t("MCP Disconnected — Using Simulation", "MCP 未连接 — 使用模拟执行")}</span>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              <input
+                type="text"
+                value={mcpUrl}
+                onChange={(e) => setMcpUrl(e.target.value)}
+                className="px-3 py-1.5 rounded-lg border border-border/50 bg-card/80 text-xs font-mono w-52 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                placeholder="ws://localhost:8765"
+              />
+              <button
+                onClick={handleMCPConnect}
+                className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  mcpStatus === "connected"
+                    ? "bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                    : "bg-primary/10 text-primary hover:bg-primary/20"
+                }`}
+              >
+                {mcpStatus === "connecting" ? t("Connecting...", "连接中...") : mcpStatus === "connected" ? t("Disconnect", "断开") : t("Connect", "连接")}
+              </button>
+            </div>
+          </div>
         </motion.div>
 
         {/* Flow Selector */}
@@ -222,6 +291,20 @@ export default function MCPVisualizer() {
                     <pre className={`text-xs font-mono overflow-x-auto max-h-48 overflow-y-auto ${liveResult ? "text-green-400" : "text-foreground/50"}`}>
                       {JSON.stringify(liveResult || step.result, null, 2)}
                     </pre>
+                    {txHashes[key] && (
+                      <div className="mt-3 flex items-center gap-2 p-2 rounded-lg bg-primary/5 border border-primary/10">
+                        <span className="text-[10px] text-muted-foreground">TX:</span>
+                        <code className="text-[10px] font-mono text-primary">{txHashes[key].hash.slice(0, 16)}...</code>
+                        <a
+                          href={txHashes[key].url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-[10px] text-primary hover:underline ml-auto"
+                        >
+                          {t("View on Explorer", "查看链上")} <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    )}
                   </div>
                 </div>
               </motion.div>
