@@ -7,7 +7,7 @@ import {
   Sun, Moon, Globe, Menu, X, Zap, BarChart3, Cpu, Wallet,
   Eye, FlaskConical, Shield, History, Brain, BookOpen, Layers,
   ChevronDown, Terminal, Search, Sparkles, Fish, ShieldCheck,
-  Share2, Monitor, Mic, Bot, MessageSquare,
+  Share2, Monitor, Mic, Bot, MessageSquare, ExternalLink,
 } from "lucide-react";
 
 const navGroups = [
@@ -62,36 +62,35 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Top Navigation */}
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50">
+      {/* Top Navigation — Quantum Style */}
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/40">
         <div
           className="absolute inset-0"
           style={{
             background: theme === "dark"
-              ? "oklch(0.07 0.005 260 / 80%)"
-              : "oklch(0.985 0.002 260 / 80%)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
+              ? "rgba(6, 6, 10, 0.65)"
+              : "rgba(255, 255, 255, 0.7)",
+            backdropFilter: "blur(24px)",
+            WebkitBackdropFilter: "blur(24px)",
           }}
         />
-        <nav className="relative container flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-              <Zap className="w-4 h-4 text-primary" />
+        <nav className="relative container flex items-center justify-between h-[68px]">
+          {/* Logo — OKX icon + "OKX AI CORE" only, no subtitle */}
+          <Link href="/" className="flex items-center gap-3.5 group">
+            <div className="w-[34px] h-[34px] rounded-[10px] overflow-hidden flex items-center justify-center border border-border/30 group-hover:border-primary/30 transition-colors">
+              <img
+                src="/okx-logo.png"
+                alt="OKX"
+                className="w-full h-full object-cover"
+              />
             </div>
-            <div className="flex flex-col">
-              <span className="font-extrabold text-sm tracking-tight leading-none">
-                OKX AI CORE
-              </span>
-              <span className="text-[9px] text-muted-foreground tracking-widest uppercase">
-                Agent Trade Terminal
-              </span>
-            </div>
+            <span className="font-[800] text-[15px] tracking-[0.8px] bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
+              OKX AI CORE
+            </span>
           </Link>
 
-          {/* Desktop Nav */}
-          <div className="hidden lg:flex items-center gap-1">
+          {/* Desktop Nav — Pill container style */}
+          <div className="hidden lg:flex items-center gap-[2px] p-1 rounded-[10px] bg-card/30 border border-border/30">
             {navGroups.map((group) => (
               <div
                 key={group.labelEn}
@@ -99,9 +98,9 @@ export default function Layout({ children }: { children: ReactNode }) {
                 onMouseEnter={() => setActiveDropdown(group.labelEn)}
                 onMouseLeave={() => setActiveDropdown(null)}
               >
-                <button className="flex items-center gap-1 px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent/50">
+                <button className="flex items-center gap-1 px-[18px] py-[7px] text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors rounded-[7px] hover:bg-card/50">
                   {t(group.labelEn, group.labelZh)}
-                  <ChevronDown className="w-3.5 h-3.5" />
+                  <ChevronDown className="w-3 h-3" />
                 </button>
                 <AnimatePresence>
                   {activeDropdown === group.labelEn && (
@@ -110,11 +109,12 @@ export default function Layout({ children }: { children: ReactNode }) {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 8 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute top-full left-0 mt-1 w-56 py-2 rounded-xl border border-border/50 shadow-xl"
+                      className="absolute top-full left-0 mt-2 w-60 py-2 rounded-[14px] border border-border/40 shadow-2xl"
                       style={{
                         background: theme === "dark"
-                          ? "oklch(0.12 0.005 260)"
-                          : "oklch(1 0 0)",
+                          ? "rgba(12, 12, 18, 0.95)"
+                          : "rgba(255, 255, 255, 0.98)",
+                        backdropFilter: "blur(20px)",
                       }}
                     >
                       {group.items.map((item) => {
@@ -124,10 +124,10 @@ export default function Layout({ children }: { children: ReactNode }) {
                           <Link
                             key={item.path}
                             href={item.path}
-                            className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                            className={`flex items-center gap-3 px-4 py-2.5 text-[13px] transition-colors ${
                               isActive
                                 ? "text-primary bg-primary/5"
-                                : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                                : "text-muted-foreground hover:text-foreground hover:bg-accent/30"
                             }`}
                           >
                             {Icon && <Icon className="w-4 h-4" />}
@@ -146,20 +146,19 @@ export default function Layout({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-2">
             <button
               onClick={toggleLang}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground border border-border/50 rounded-lg hover:bg-accent/50 transition-colors"
+              className="hidden sm:flex items-center gap-1.5 px-3.5 py-[6px] text-[11px] font-[600] text-muted-foreground hover:text-foreground border border-border/40 rounded-[8px] hover:bg-card/50 transition-colors tracking-[0.3px]"
             >
-              <Globe className="w-3.5 h-3.5" />
               {lang === "en" ? "中文" : "EN"}
             </button>
             <button
               onClick={toggleTheme}
-              className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent/50 transition-colors"
+              className="p-2 text-muted-foreground hover:text-foreground rounded-[8px] border border-border/40 hover:bg-card/50 transition-colors"
             >
               {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="lg:hidden p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent/50 transition-colors"
+              className="lg:hidden p-2 text-muted-foreground hover:text-foreground rounded-[8px] hover:bg-card/50 transition-colors"
             >
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -182,15 +181,15 @@ export default function Layout({ children }: { children: ReactNode }) {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="absolute right-0 top-16 bottom-0 w-72 border-l border-border/50 overflow-y-auto"
+              className="absolute right-0 top-[68px] bottom-0 w-72 border-l border-border/40 overflow-y-auto"
               style={{
-                background: theme === "dark" ? "oklch(0.09 0.005 260)" : "oklch(0.99 0.002 260)",
+                background: theme === "dark" ? "rgba(6, 6, 10, 0.98)" : "rgba(255, 255, 255, 0.98)",
               }}
             >
-              <div className="p-4 space-y-6">
+              <div className="p-5 space-y-7">
                 {navGroups.map((group) => (
                   <div key={group.labelEn}>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-3">
+                    <p className="text-[11px] font-[700] text-muted-foreground uppercase tracking-[3px] mb-3 px-3">
                       {t(group.labelEn, group.labelZh)}
                     </p>
                     <div className="space-y-0.5">
@@ -202,10 +201,10 @@ export default function Layout({ children }: { children: ReactNode }) {
                             key={item.path}
                             href={item.path}
                             onClick={() => setMobileOpen(false)}
-                            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                            className={`flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-[13px] transition-colors ${
                               isActive
                                 ? "text-primary bg-primary/10"
-                                : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                                : "text-muted-foreground hover:text-foreground hover:bg-accent/30"
                             }`}
                           >
                             {Icon && <Icon className="w-4 h-4" />}
@@ -216,10 +215,10 @@ export default function Layout({ children }: { children: ReactNode }) {
                     </div>
                   </div>
                 ))}
-                <div className="pt-4 border-t border-border/50">
+                <div className="pt-4 border-t border-border/40">
                   <button
                     onClick={toggleLang}
-                    className="flex items-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground w-full rounded-lg hover:bg-accent/50 transition-colors"
+                    className="flex items-center gap-2 px-3 py-2.5 text-[13px] text-muted-foreground hover:text-foreground w-full rounded-[10px] hover:bg-accent/30 transition-colors"
                   >
                     <Globe className="w-4 h-4" />
                     {lang === "en" ? "切换到中文" : "Switch to English"}
@@ -232,7 +231,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       </AnimatePresence>
 
       {/* Main Content */}
-      <main className="pt-16">
+      <main className="pt-[68px]">
         <AnimatePresence mode="wait">
           <motion.div
             key={location}
@@ -246,14 +245,14 @@ export default function Layout({ children }: { children: ReactNode }) {
         </AnimatePresence>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-border/50 py-8 mt-16">
+      {/* Footer — Quantum Style */}
+      <footer className="border-t border-border/40 py-10 mt-20">
         <div className="container">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Zap className="w-4 h-4 text-primary" />
-              <span className="font-bold text-foreground">OKX AI CORE</span>
-              <span className="text-xs">|</span>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-5">
+            <div className="flex items-center gap-3 text-[13px] text-muted-foreground flex-wrap justify-center">
+              <img src="/okx-logo.png" alt="OKX" className="w-5 h-5 rounded" />
+              <span className="font-[800] text-foreground">OKX AI CORE</span>
+              <span className="text-border">·</span>
               <span>Built by <strong className="text-foreground">小天才铭77Ouo</strong></span>
               <a
                 href="https://x.com/chen1904o"
@@ -263,19 +262,19 @@ export default function Layout({ children }: { children: ReactNode }) {
               >
                 @Chen1904o
               </a>
-              <span className="text-xs">|</span>
+              <span className="text-border">·</span>
               <a
                 href="https://t.me/se77ouo"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary hover:underline"
+                className="text-primary hover:underline flex items-center gap-1"
               >
                 Telegram
               </a>
             </div>
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <div className="flex items-center gap-4 text-[12px] text-muted-foreground">
               <span>{t("Simulation-first · Keys local only", "模拟优先 · 密钥本地存储")}</span>
-              <span>•</span>
+              <span className="text-border">·</span>
               <span>MIT License</span>
             </div>
           </div>

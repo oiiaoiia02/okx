@@ -46,7 +46,6 @@ function matchIntents(query: string): OKXTool[] {
     if (score > 0) scores.set(toolName, score);
   }
 
-  // Also search all tools by name/desc/tags
   for (const tool of OKX_TOOLS) {
     const existing = scores.get(tool.name) || 0;
     let score = existing;
@@ -130,7 +129,7 @@ function LivePriceTicker() {
 
   useEffect(() => {
     fetchPrices();
-    const iv = setInterval(fetchPrices, 8000);
+    const iv = setInterval(fetchPrices, 5000);
     return () => clearInterval(iv);
   }, [fetchPrices]);
 
@@ -141,21 +140,19 @@ function LivePriceTicker() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.6 }}
-      className="flex items-center justify-center gap-4 flex-wrap mb-8"
+      className="flex items-center justify-center gap-5 flex-wrap mb-14"
     >
       {prices.map((p) => (
         <Link key={p.instId} href="/token-monitor">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm hover:border-primary/30 transition-all group cursor-pointer">
-            <span className="text-xs font-bold text-foreground">{p.symbol}</span>
-            <span className="text-xs font-mono text-foreground">${formatPrice(p.price)}</span>
-            <span className={`text-[10px] font-semibold flex items-center gap-0.5 ${p.change24h >= 0 ? "text-green-400" : "text-red-400"}`}>
-              {p.change24h >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+          <div className="flex items-center gap-3 px-6 py-3 rounded-[14px] border border-border/50 bg-card backdrop-blur-sm hover:border-primary/10 hover:bg-[rgba(255,255,255,0.03)] transition-all duration-300 hover:-translate-y-[1px] cursor-pointer">
+            <span className="text-[12px] font-[800] text-foreground tracking-[0.5px]">{p.symbol}</span>
+            <span className="text-[12px] font-mono text-foreground">${formatPrice(p.price)}</span>
+            <span className={`text-[11px] font-[700] font-mono px-2 py-[2px] rounded-[6px] ${
+              p.change24h >= 0 ? "text-primary bg-primary/6" : "text-red-400 bg-red-400/6"
+            }`}>
               {p.change24h >= 0 ? "+" : ""}{p.change24h.toFixed(2)}%
             </span>
-            <span className="text-[9px] text-muted-foreground hidden sm:inline">
-              {formatVolume(p.volumeCcy24h)}
-            </span>
-            <span className="text-[8px] text-primary/50 hidden sm:inline">OKX</span>
+            <span className="text-[9px] text-muted-foreground font-[600] tracking-[1px] uppercase hidden sm:inline">OKX</span>
           </div>
         </Link>
       ))}
@@ -177,16 +174,16 @@ function DemoButtons({ onDemo }: { onDemo: (query: string) => void }) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.7 }}
-      className="flex items-center justify-center gap-3 flex-wrap mb-6"
+      className="flex items-center justify-center gap-3 flex-wrap mb-10"
     >
-      <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+      <span className="text-[10px] text-muted-foreground uppercase tracking-[2px] font-[600]">
         {t("Quick Demo", "快速体验")}
       </span>
       {demos.map((d) => (
         <button
           key={d.label}
           onClick={() => onDemo(d.query)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-primary/20 bg-primary/5 text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] border border-primary/15 bg-primary/4 text-[12px] font-[600] text-primary hover:bg-primary/8 transition-all duration-200"
         >
           <d.icon className="w-3 h-3" />
           {d.label}
@@ -207,7 +204,7 @@ function TerminalDemo() {
   const sequence = [
     { text: "$ okx market ticker BTC-USDT", type: "cmd" as const, delay: 800 },
     { text: "  → Calling OKX V5 API: /market/ticker?instId=BTC-USDT", type: "out" as const, delay: 400 },
-    { text: "  BTC-USDT  $70,126.00  ▲ +1.70%  24h Vol: $702.5M  [Source: OKX]", type: "success" as const, delay: 600 },
+    { text: "  BTC-USDT  $70,126.00  ▲ +1.70%  24h Vol: $702.5M  [OKX]", type: "success" as const, delay: 600 },
     { text: "> Show my current positions and P&L", type: "cmd" as const, delay: 1200 },
     { text: "  → MCP: swap_get_positions + account_balance", type: "out" as const, delay: 500 },
     { text: "  BTC-USDT-SWAP  Long 0.1  Entry: $68,500  uPnL: +$162.60", type: "success" as const, delay: 400 },
@@ -227,14 +224,14 @@ function TerminalDemo() {
   }, [step, isInView]);
 
   return (
-    <div ref={ref} className="terminal-block w-full max-w-2xl mx-auto">
+    <div ref={ref} className="terminal-block w-full max-w-[840px] mx-auto">
       <div className="terminal-header">
         <div className="terminal-dot" style={{ background: "#ff5f57" }} />
         <div className="terminal-dot" style={{ background: "#febc2e" }} />
         <div className="terminal-dot" style={{ background: "#28c840" }} />
-        <span className="ml-3 text-xs text-muted-foreground font-mono">okx-ai-core — Agent Trade Terminal</span>
+        <span className="ml-3.5 text-[12px] text-muted-foreground font-mono">okx-ai-core — Agent Trade Terminal</span>
       </div>
-      <div className="p-4 space-y-1.5 min-h-[260px] font-mono text-sm">
+      <div className="p-6 space-y-2 min-h-[280px] font-mono text-[13px] leading-[2.2]">
         {lines.map((line, i) => (
           <motion.div
             key={i}
@@ -270,17 +267,17 @@ function FeatureCard({ icon: Icon, title, desc, href, tags, delay }: {
       transition={{ duration: 0.4, delay }}
     >
       <Link href={href}>
-        <div className="group glass-card p-6 h-full hover:border-primary/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-4 group-hover:bg-primary/15 transition-colors">
-            <Icon className="w-5 h-5 text-primary" />
+        <div className="group glass-card p-8 h-full">
+          <div className="w-[52px] h-[52px] rounded-[16px] bg-gradient-to-br from-primary/6 to-[rgba(79,143,255,0.03)] border border-primary/8 flex items-center justify-center mb-7 group-hover:border-primary/15 transition-colors">
+            <Icon className="w-[24px] h-[24px] text-primary" />
           </div>
-          <h3 className="font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">{title}</h3>
-          <p className="text-sm text-muted-foreground leading-relaxed mb-3">{desc}</p>
+          <h3 className="font-[700] text-[18px] text-foreground mb-3 group-hover:text-primary transition-colors tracking-[-0.01em]">{title}</h3>
+          <p className="text-[14px] text-muted-foreground leading-[1.75] mb-5">{desc}</p>
           {tags && (
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-2">
               {tags.map((tag) => (
-                <span key={tag} className="text-xs px-2 py-0.5 rounded-md bg-accent text-muted-foreground">
-                  #{tag}
+                <span key={tag} className="text-[11px] px-3 py-1 rounded-[8px] bg-card border border-border/50 text-muted-foreground font-[500]">
+                  {tag}
                 </span>
               ))}
             </div>
@@ -297,7 +294,7 @@ function ClientLogos() {
   return (
     <div className="flex items-center justify-center gap-6 flex-wrap">
       {clients.map((name) => (
-        <div key={name} className="px-5 py-2.5 rounded-xl border border-border/50 bg-card/50 text-sm font-medium text-muted-foreground">
+        <div key={name} className="px-6 py-3 rounded-[12px] border border-border/40 bg-card/50 text-[13px] font-[500] text-muted-foreground">
           {name}
         </div>
       ))}
@@ -317,14 +314,14 @@ function InstallCommand() {
   };
 
   return (
-    <div className="flex items-center gap-2 max-w-lg mx-auto">
-      <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl border border-border/50 bg-card/80 font-mono text-sm">
+    <div className="flex items-center gap-3 max-w-lg mx-auto">
+      <div className="flex-1 flex items-center gap-3 px-5 py-3.5 rounded-[14px] border border-border/40 bg-card/80 font-mono text-[13px]">
         <span className="text-muted-foreground">$</span>
         <span className="text-foreground">{cmd}</span>
       </div>
       <button
         onClick={copy}
-        className="p-3 rounded-xl border border-border/50 bg-card/80 hover:bg-accent transition-colors"
+        className="p-3 rounded-[14px] border border-border/40 bg-card/80 hover:bg-accent/30 transition-colors"
       >
         {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
       </button>
@@ -333,7 +330,7 @@ function InstallCommand() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-/* ─── HOME PAGE ─── */
+/* ─── HOME PAGE — QUANTUM THEME ─── */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 export default function Home() {
@@ -345,7 +342,6 @@ export default function Home() {
   const searchRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
 
-  // Typing animation (only when search is empty and not focused)
   const typingTexts = [
     t("Buy 0.1 BTC at market price", "以市价买入 0.1 BTC"),
     t("Show my portfolio P&L", "查看我的持仓盈亏"),
@@ -354,10 +350,8 @@ export default function Home() {
   ];
   const typedText = useTypingEffect(typingTexts);
 
-  // Intent matching
   const matchedTools = useMemo(() => matchIntents(searchQuery), [searchQuery]);
 
-  // Voice input
   const toggleVoice = useCallback(() => {
     if (listening) {
       recognitionRef.current?.stop();
@@ -381,26 +375,21 @@ export default function Home() {
     setListening(true);
   }, [listening]);
 
-  // Handle demo button click
   const handleDemo = (query: string) => {
     setSearchQuery(query);
     setSearchFocused(true);
     searchRef.current?.focus();
   };
 
-  // Handle search submit
   const handleSubmit = () => {
     if (!searchQuery.trim()) return;
-    // Navigate to copilot with query
     setLocation(`/copilot?q=${encodeURIComponent(searchQuery)}`);
   };
 
-  // Handle tool click from intent preview
   const handleToolClick = (tool: OKXTool) => {
     setLocation(`/agent-trade-kit?tool=${encodeURIComponent(tool.name)}`);
   };
 
-  // Keyboard shortcut
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -418,7 +407,7 @@ export default function Home() {
     { icon: Terminal, title: t("MCP Visualizer", "MCP 可视化"), desc: t("Visualize MCP tool calls with editable JSON payload. One-click copy for Claude/OpenClaw.", "可视化MCP工具调用，可编辑JSON载荷。一键复制到Claude/OpenClaw。"), href: "/mcp-visualizer", tags: ["MCP", "JSON", "CLI"], delay: 0.05 },
     { icon: Zap, title: t("Agent Skills", "Agent Skills"), desc: t("4 plug-and-play skills: market data, trading, portfolio, bot management.", "4个即插即用技能：行情数据、交易、投资组合、Bot管理。"), href: "/agent-skills", tags: ["Skills", "Plug-and-Play"], delay: 0.1 },
     { icon: Wallet, title: t("Wallet Connect", "钱包连接"), desc: t("Real OKX Wallet connection. View on-chain balance, auto-refresh.", "真实OKX钱包连接。查看链上余额，自动刷新。"), href: "/wallet", tags: ["OKX Wallet", "On-chain"], delay: 0.15 },
-    { icon: Eye, title: t("Token Monitor", "代币监控"), desc: t("Real-time OKX V5 API prices. Custom watchlist with 8s refresh.", "OKX V5 API实时价格。自定义监控列表，8秒刷新。"), href: "/token-monitor", tags: ["OKX API", "Real-time"], delay: 0.2 },
+    { icon: Eye, title: t("Token Monitor", "代币监控"), desc: t("Real-time OKX V5 API prices. Custom watchlist with 5s refresh.", "OKX V5 API实时价格。自定义监控列表，5秒刷新。"), href: "/token-monitor", tags: ["OKX API", "Real-time"], delay: 0.2 },
     { icon: FlaskConical, title: t("Strategy Studio", "策略实验室"), desc: t("Build Grid/DCA/TWAP strategies with real historical price backtest.", "构建网格/DCA/TWAP策略，基于真实历史价格回测。"), href: "/strategy-studio", tags: ["Grid", "DCA", "Backtest"], delay: 0.25 },
     { icon: Shield, title: t("Risk Dashboard", "风控仪表盘"), desc: t("Real-time risk metrics based on wallet balance and OKX prices.", "基于钱包余额和OKX价格的实时风险指标。"), href: "/risk-dashboard", tags: ["Risk", "Real-time"], delay: 0.3 },
     { icon: History, title: t("Trade Review", "交易复盘"), desc: t("Full lifecycle review with win rate, Sharpe ratio, PnL curves.", "完整生命周期复盘，胜率、夏普比率、盈亏曲线。"), href: "/trade-review", tags: ["Sharpe", "PnL"], delay: 0.35 },
@@ -430,27 +419,29 @@ export default function Home() {
 
   return (
     <div className="relative">
-      {/* Hero Section */}
-      <section className="relative min-h-[92vh] flex flex-col items-center justify-center px-4 overflow-hidden">
-        {/* Particle Background */}
+      {/* ═══ Hero Section — Quantum ═══ */}
+      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
+        {/* Background */}
         <div className="absolute inset-0 z-0">
           <ParticleBackground />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/50 to-background" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/40 to-background" />
         </div>
 
+        {/* Pulse Ring */}
+        <div className="quantum-ring" />
+
         {/* Content */}
-        <div className="relative z-10 max-w-4xl mx-auto text-center">
-          {/* OKX Badge */}
+        <div className="relative z-10 max-w-[900px] mx-auto text-center">
+          {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/20 bg-primary/5 mb-8"
+            className="inline-flex items-center gap-3 px-5 py-2 pl-5 pr-2 rounded-full border border-primary/10 bg-primary/3 mb-16"
           >
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-primary">OKX Agent Trade Kit</span>
-            <span className="text-xs text-muted-foreground">
-              83 {t("tools", "工具")} · 7 {t("modules", "模块")} · 4 {t("skills", "技能")}
+            <span className="text-[13px] font-[500] text-primary">OKX Agent Trade Kit</span>
+            <span className="px-3.5 py-1 rounded-full bg-primary/8 text-[11px] font-[700] text-primary tracking-[0.5px]">
+              83 · 7 · 4
             </span>
           </motion.div>
 
@@ -459,7 +450,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1]"
+            className="text-[clamp(48px,7vw,88px)] font-[900] leading-[1] tracking-[-0.05em] mb-10"
           >
             {t("If you can think it,", "凡你所思，")}
             <br />
@@ -468,32 +459,29 @@ export default function Home() {
             </span>
           </motion.h1>
 
-          {/* Subtitle */}
+          {/* Subtitle — simplified */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed"
+            className="text-[17px] text-muted-foreground max-w-[520px] mx-auto mb-[72px] leading-[1.8] font-[400]"
           >
             {t(
-              "Trade on OKX with natural language. All prices from OKX V5 API. MCP Server + CLI + Skills, open source, keys never leave your device.",
-              "用自然语言在OKX交易。所有行情来自OKX V5官方API。MCP Server + CLI + Skills，开源，密钥永不离开你的设备。"
+              "Natural language trading powered by OKX V5 API.",
+              "基于 OKX V5 API 的自然语言交易。"
             )}
           </motion.p>
 
-          {/* ═══ Spotlight Search (REAL) ═══ */}
+          {/* ═══ Quantum Search ═══ */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="max-w-2xl mx-auto mb-6 relative"
+            className="max-w-[640px] mx-auto mb-14 relative"
           >
-            <div className="relative group">
-              <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500" />
-              <div className={`relative flex items-center gap-3 px-6 py-4 rounded-2xl border bg-card/80 backdrop-blur-xl transition-all duration-300 ${
-                searchFocused ? "border-primary/40 okx-glow" : "border-border/50"
-              }`}>
-                <Search className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+            <div className="quantum-search-border">
+              <div className="quantum-search-inner">
+                <Search className="w-[18px] h-[18px] text-muted-foreground flex-shrink-0" />
                 <input
                   ref={searchRef}
                   type="text"
@@ -503,18 +491,17 @@ export default function Home() {
                   onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
                   onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
                   placeholder={searchFocused ? t("Describe your trading intent...", "描述你的交易意图...") : ""}
-                  className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground outline-none text-sm"
+                  className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground outline-none text-[15px]"
                 />
                 {!searchFocused && !searchQuery && (
-                  <span className="absolute left-14 text-muted-foreground text-sm pointer-events-none">
+                  <span className="absolute left-[72px] text-muted-foreground text-[15px] pointer-events-none">
                     {typedText}
                     <span className="inline-block w-0.5 h-5 bg-primary ml-0.5 animate-pulse align-middle" />
                   </span>
                 )}
-                {/* Voice button */}
                 <button
                   onClick={toggleVoice}
-                  className={`p-1.5 rounded-lg transition-colors ${
+                  className={`p-1.5 rounded-[8px] transition-colors ${
                     listening ? "bg-red-500/20 text-red-400" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                   }`}
                   title={t("Voice input", "语音输入")}
@@ -524,14 +511,15 @@ export default function Home() {
                 {searchQuery && (
                   <button
                     onClick={handleSubmit}
-                    className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                    className="p-1.5 rounded-[8px] bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
                   >
                     <Send className="w-4 h-4" />
                   </button>
                 )}
-                <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded-md bg-accent text-xs text-muted-foreground border border-border/50">
-                  ⌘K
-                </kbd>
+                <div className="hidden sm:flex gap-1">
+                  <kbd className="px-2 py-0.5 rounded-[5px] bg-card border border-border/50 text-[10px] text-muted-foreground font-mono font-[500]">⌘</kbd>
+                  <kbd className="px-2 py-0.5 rounded-[5px] bg-card border border-border/50 text-[10px] text-muted-foreground font-mono font-[500]">K</kbd>
+                </div>
               </div>
             </div>
 
@@ -542,27 +530,27 @@ export default function Home() {
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  className="absolute top-full left-0 right-0 mt-2 rounded-xl border border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden z-20"
+                  className="absolute top-full left-0 right-0 mt-3 rounded-[16px] border border-border/40 bg-[rgba(12,12,18,0.95)] backdrop-blur-xl shadow-2xl overflow-hidden z-20"
                 >
-                  <div className="px-4 py-2 border-b border-border/50">
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                  <div className="px-5 py-2.5 border-b border-border/40">
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-[2px] font-[600]">
                       {t("Matched Tools", "匹配工具")} ({matchedTools.length})
                     </span>
                   </div>
-                  {matchedTools.map((tool, i) => (
+                  {matchedTools.map((tool) => (
                     <button
                       key={tool.name}
                       onMouseDown={() => handleToolClick(tool)}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-accent/50 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-accent/30 transition-colors text-left"
                     >
                       <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: tool.moduleColor }} />
                       <div className="flex-1 min-w-0">
-                        <div className="text-xs font-mono text-primary">{tool.name}</div>
+                        <div className="text-[12px] font-mono text-primary">{tool.name}</div>
                         <div className="text-[11px] text-muted-foreground truncate">
                           {t(tool.descEn, tool.descZh)}
                         </div>
                       </div>
-                      <span className="text-[10px] px-2 py-0.5 rounded-md bg-accent text-muted-foreground flex-shrink-0">
+                      <span className="text-[10px] px-2.5 py-1 rounded-[8px] bg-card border border-border/40 text-muted-foreground flex-shrink-0">
                         {tool.module}
                       </span>
                     </button>
@@ -583,12 +571,12 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="mb-8"
+            className="mb-12"
           >
             <InstallCommand />
           </motion.div>
 
-          {/* CTA Buttons */}
+          {/* CTA Buttons — Real links */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -596,43 +584,44 @@ export default function Home() {
             className="flex items-center justify-center gap-4 flex-wrap"
           >
             <a
-              href="https://github.com/oiiaoiia02/okx"
+              href="https://github.com/okx/agent-trade-kit"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-foreground text-background font-semibold text-sm hover:opacity-90 transition-opacity"
+              className="inline-flex items-center gap-2.5 px-10 py-4 rounded-[14px] bg-gradient-to-r from-primary to-[#00cc7a] text-primary-foreground font-[700] text-[14px] hover:-translate-y-[2px] hover:shadow-[0_16px_48px_rgba(0,230,138,0.2)] transition-all duration-300 relative overflow-hidden group"
             >
-              <Github className="w-4 h-4" />
-              {t("View Source", "查看源码")}
+              <div className="absolute inset-0 bg-gradient-to-r from-white/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <Github className="w-[18px] h-[18px] relative z-10" />
+              <span className="relative z-10">Agent Trade Kit</span>
             </a>
             <a
-              href="https://www.okx.com/zh-hans/web3/build/docs/devportal/introduction-to-developer-portal-interface"
+              href="https://app.okx.com/docs-v5/agent_zh"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-border/50 text-foreground font-semibold text-sm hover:bg-accent/50 transition-colors"
+              className="inline-flex items-center gap-2.5 px-10 py-4 rounded-[14px] border border-border/50 text-foreground font-[600] text-[14px] hover:border-[rgba(255,255,255,0.12)] hover:bg-[rgba(255,255,255,0.02)] hover:-translate-y-[1px] transition-all duration-300"
             >
               <ExternalLink className="w-4 h-4" />
-              {t("OKX Docs", "OKX 文档")}
+              {t("Official Docs", "官方文档")}
             </a>
           </motion.div>
         </div>
       </section>
 
-      {/* Terminal Demo */}
-      <section className="py-20 px-4">
+      {/* ═══ Terminal Demo ═══ */}
+      <section className="py-[160px] px-6">
         <div className="container">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="text-center mb-[60px]"
           >
-            <p className="text-sm font-medium text-primary mb-3 uppercase tracking-wider">
+            <p className="text-[11px] font-[700] text-primary mb-5 uppercase tracking-[3px]">
               {t("Live Demo", "实时演示")}
             </p>
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+            <h2 className="text-[clamp(30px,4vw,44px)] font-[800] mb-4 tracking-[-0.03em]">
               {t("Natural Language → MCP → Execution", "自然语言 → MCP → 执行")}
             </h2>
-            <p className="text-muted-foreground max-w-lg mx-auto">
+            <p className="text-[15px] text-muted-foreground max-w-[460px] mx-auto leading-[1.7]">
               {t(
                 "Describe your intent, the agent calls OKX API and executes via MCP.",
                 "描述你的意图，Agent调用OKX API并通过MCP执行。"
@@ -643,16 +632,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Compatible Clients */}
-      <section className="py-12 px-4">
+      {/* ═══ Compatible Clients ═══ */}
+      <section className="py-16 px-6">
         <div className="container">
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="text-center mb-8"
+            className="text-center mb-10"
           >
-            <p className="text-sm text-muted-foreground">
+            <p className="text-[13px] text-muted-foreground">
               {t("Works with every MCP client", "兼容所有 MCP 客户端")}
             </p>
           </motion.div>
@@ -660,29 +649,29 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Feature Grid */}
-      <section className="py-20 px-4">
-        <div className="container">
+      {/* ═══ Feature Grid ═══ */}
+      <section className="py-[160px] px-6">
+        <div className="container max-w-[1280px]">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-[60px]"
           >
-            <p className="text-sm font-medium text-primary mb-3 uppercase tracking-wider">
+            <p className="text-[11px] font-[700] text-primary mb-5 uppercase tracking-[3px]">
               {t("Full Suite", "完整套件")}
             </p>
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+            <h2 className="text-[clamp(30px,4vw,44px)] font-[800] mb-4 tracking-[-0.03em]">
               {t("Everything you need to trade with AI", "AI交易所需的一切")}
             </h2>
-            <p className="text-muted-foreground max-w-lg mx-auto">
+            <p className="text-[15px] text-muted-foreground max-w-[460px] mx-auto leading-[1.7]">
               {t(
                 "20+ modules covering the complete trading lifecycle, all powered by OKX official API.",
                 "20+模块覆盖完整交易生命周期，全部基于OKX官方API驱动。"
               )}
             </p>
           </motion.div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {features.map((f) => (
               <FeatureCard key={f.href + f.title} {...f} />
             ))}
@@ -690,9 +679,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats */}
-      <section className="py-20 px-4">
-        <div className="container">
+      {/* ═══ Stats ═══ */}
+      <section className="py-[120px] px-6">
+        <div className="container max-w-[1080px]">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               { value: "83", label: t("Trading Tools", "交易工具") },
@@ -706,66 +695,77 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="glass-card p-6 text-center"
+                className="glass-card p-10 text-center"
               >
-                <div className="text-3xl sm:text-4xl font-extrabold okx-gradient-text mb-2">{stat.value}</div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
+                <div className="text-[44px] font-[900] tracking-[-0.03em] okx-gradient-text mb-3">{stat.value}</div>
+                <div className="text-[14px] text-muted-foreground font-[500]">{stat.label}</div>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Get Started */}
-      <section className="py-20 px-4">
-        <div className="container max-w-3xl">
+      {/* ═══ Get Started ═══ */}
+      <section className="py-[160px] px-6">
+        <div className="container max-w-[780px]">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="glass-card p-8 sm:p-12 text-center"
+            className="glass-card p-12 sm:p-16 text-center relative"
           >
-            <h2 className="text-2xl sm:text-3xl font-bold mb-4">
+            {/* Top gradient line */}
+            <div className="absolute top-[-1px] left-[15%] right-[15%] h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+
+            <h2 className="text-[32px] font-[800] mb-5 tracking-[-0.03em]">
               {t("Get Started in 3 Minutes", "3分钟快速开始")}
             </h2>
-            <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+            <p className="text-[16px] text-muted-foreground mb-12 max-w-[440px] mx-auto leading-[1.7]">
               {t(
                 "Install, configure your API key, and start trading with natural language.",
                 "安装、配置API密钥，开始用自然语言交易。"
               )}
             </p>
-            <div className="space-y-4 text-left max-w-md mx-auto">
+            <div className="space-y-5 text-left max-w-md mx-auto mb-12">
               {[
                 { step: "01", title: t("Install", "安装"), cmd: "npm install -g okx-trade-mcp okx-trade-cli" },
                 { step: "02", title: t("Configure", "配置"), cmd: "vim ~/.okx/config.toml" },
                 { step: "03", title: t("Trade", "交易"), cmd: 'okx market ticker BTC-USDT' },
               ].map((s) => (
-                <div key={s.step} className="flex items-start gap-4">
-                  <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded-md mt-0.5">{s.step}</span>
+                <div key={s.step} className="flex items-start gap-5">
+                  <span className="text-[12px] font-[700] text-primary bg-primary/8 px-3 py-1.5 rounded-[8px] mt-0.5">{s.step}</span>
                   <div className="flex-1">
-                    <p className="font-semibold text-sm mb-1">{s.title}</p>
-                    <code className="text-xs text-muted-foreground font-mono bg-accent/50 px-2 py-1 rounded">{s.cmd}</code>
+                    <p className="font-[600] text-[14px] mb-1.5">{s.title}</p>
+                    <code className="text-[12px] text-muted-foreground font-mono bg-card px-3 py-1.5 rounded-[8px] border border-border/40">{s.cmd}</code>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="mt-8 flex items-center justify-center gap-4 flex-wrap">
+            <div className="flex items-center justify-center gap-4 flex-wrap">
               <a
-                href="https://www.okx.com/zh-hans/web3/build/docs/devportal/introduction-to-developer-portal-interface"
+                href="https://github.com/okx/agent-trade-kit"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity"
+                className="inline-flex items-center gap-2.5 px-10 py-4 rounded-[14px] bg-gradient-to-r from-primary to-[#00cc7a] text-primary-foreground font-[700] text-[14px] hover:-translate-y-[2px] hover:shadow-[0_16px_48px_rgba(0,230,138,0.2)] transition-all duration-300"
               >
-                {t("Visit OKX Agent Trade Kit", "访问 OKX Agent Trade Kit")}
+                Agent Trade Kit
                 <ArrowRight className="w-4 h-4" />
+              </a>
+              <a
+                href="https://app.okx.com/docs-v5/agent_zh"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-[14px] border border-border/50 text-foreground font-[600] text-[14px] hover:border-[rgba(255,255,255,0.12)] hover:bg-[rgba(255,255,255,0.02)] transition-all duration-300"
+              >
+                {t("Official Docs", "官方文档")}
               </a>
               <a
                 href="https://t.me/se77ouo"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-border/50 text-foreground font-semibold text-sm hover:bg-accent/50 transition-colors"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-[14px] border border-border/50 text-foreground font-[600] text-[14px] hover:border-[rgba(255,255,255,0.12)] hover:bg-[rgba(255,255,255,0.02)] transition-all duration-300"
               >
-                {t("Join Telegram", "加入 Telegram")}
+                Telegram
               </a>
             </div>
           </motion.div>

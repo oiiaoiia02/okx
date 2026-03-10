@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Lightweight canvas-based particle background (no heavy deps).
- * Cyber-neural style: glowing dots + connecting lines + pulse effect.
+ * Quantum-style background: soft dot matrix + floating gradient orbs.
+ * Much calmer and more elegant than the previous particle system.
  */
 export default function ParticleBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -15,11 +15,17 @@ export default function ParticleBackground() {
     if (!ctx) return;
 
     let w = 0, h = 0;
-    const particles: { x: number; y: number; vx: number; vy: number; r: number; color: string; pulse: number }[] = [];
-    const colors = ["#00DC82", "#3b82f6", "#a855f7", "#06b6d4"];
-    const PARTICLE_COUNT = 45;
-    const LINK_DIST = 150;
-    let mouse = { x: -1000, y: -1000 };
+
+    // Floating orbs (soft gradient blobs)
+    const orbs: { x: number; y: number; vx: number; vy: number; r: number; color: string; phase: number }[] = [];
+    const ORB_COUNT = 5;
+    const orbColors = [
+      "rgba(0, 230, 138, 0.04)",
+      "rgba(79, 143, 255, 0.03)",
+      "rgba(167, 139, 250, 0.025)",
+      "rgba(0, 230, 138, 0.03)",
+      "rgba(79, 143, 255, 0.025)",
+    ];
 
     const resize = () => {
       const rect = canvas.parentElement?.getBoundingClientRect();
@@ -30,16 +36,16 @@ export default function ParticleBackground() {
 
     const init = () => {
       resize();
-      particles.length = 0;
-      for (let i = 0; i < PARTICLE_COUNT; i++) {
-        particles.push({
+      orbs.length = 0;
+      for (let i = 0; i < ORB_COUNT; i++) {
+        orbs.push({
           x: Math.random() * w,
           y: Math.random() * h,
-          vx: (Math.random() - 0.5) * 0.6,
-          vy: (Math.random() - 0.5) * 0.6,
-          r: Math.random() * 2 + 1,
-          color: colors[Math.floor(Math.random() * colors.length)],
-          pulse: Math.random() * Math.PI * 2,
+          vx: (Math.random() - 0.5) * 0.15,
+          vy: (Math.random() - 0.5) * 0.15,
+          r: 200 + Math.random() * 200,
+          color: orbColors[i],
+          phase: Math.random() * Math.PI * 2,
         });
       }
     };
@@ -47,91 +53,71 @@ export default function ParticleBackground() {
     const draw = () => {
       ctx.clearRect(0, 0, w, h);
 
-      // Draw links
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
+      // Draw subtle dot matrix
+      const dotSpacing = 32;
+      const centerX = w / 2;
+      const centerY = h * 0.35;
+      const maxDist = Math.sqrt(centerX * centerX + centerY * centerY);
+
+      for (let x = 0; x < w; x += dotSpacing) {
+        for (let y = 0; y < h; y += dotSpacing) {
+          const dx = x - centerX;
+          const dy = y - centerY;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < LINK_DIST) {
-            const alpha = (1 - dist / LINK_DIST) * 0.15;
-            ctx.strokeStyle = `rgba(0, 220, 130, ${alpha})`;
-            ctx.lineWidth = 0.8;
+          const fade = Math.max(0, 1 - dist / (maxDist * 0.7));
+          const alpha = fade * 0.035;
+
+          if (alpha > 0.003) {
+            ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
             ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.stroke();
+            ctx.arc(x, y, 0.8, 0, Math.PI * 2);
+            ctx.fill();
           }
         }
       }
 
-      // Mouse grab effect
-      for (const p of particles) {
-        const dx = mouse.x - p.x;
-        const dy = mouse.y - p.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 200) {
-          const alpha = (1 - dist / 200) * 0.3;
-          ctx.strokeStyle = `rgba(0, 220, 130, ${alpha})`;
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(p.x, p.y);
-          ctx.lineTo(mouse.x, mouse.y);
-          ctx.stroke();
-        }
-      }
+      // Draw floating gradient orbs
+      for (const orb of orbs) {
+        orb.phase += 0.003;
+        const breathe = 1 + Math.sin(orb.phase) * 0.1;
+        const currentR = orb.r * breathe;
 
-      // Draw particles
-      for (const p of particles) {
-        p.pulse += 0.02;
-        const pulseR = p.r + Math.sin(p.pulse) * 0.5;
+        const gradient = ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, currentR);
+        gradient.addColorStop(0, orb.color);
+        gradient.addColorStop(1, "transparent");
 
-        // Glow
-        ctx.shadowBlur = 12;
-        ctx.shadowColor = p.color;
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = 0.6 + Math.sin(p.pulse) * 0.2;
+        ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, pulseR, 0, Math.PI * 2);
+        ctx.arc(orb.x, orb.y, currentR, 0, Math.PI * 2);
         ctx.fill();
-        ctx.shadowBlur = 0;
-        ctx.globalAlpha = 1;
 
-        // Move
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.x < 0 || p.x > w) p.vx *= -1;
-        if (p.y < 0 || p.y > h) p.vy *= -1;
+        // Slow drift
+        orb.x += orb.vx;
+        orb.y += orb.vy;
+        if (orb.x < -orb.r) orb.x = w + orb.r;
+        if (orb.x > w + orb.r) orb.x = -orb.r;
+        if (orb.y < -orb.r) orb.y = h + orb.r;
+        if (orb.y > h + orb.r) orb.y = -orb.r;
       }
 
       animRef.current = requestAnimationFrame(draw);
     };
 
-    const handleMouse = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      mouse = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    };
-    const handleLeave = () => { mouse = { x: -1000, y: -1000 }; };
-
     init();
     draw();
     window.addEventListener("resize", resize);
-    canvas.addEventListener("mousemove", handleMouse);
-    canvas.addEventListener("mouseleave", handleLeave);
 
     return () => {
       cancelAnimationFrame(animRef.current);
       window.removeEventListener("resize", resize);
-      canvas.removeEventListener("mousemove", handleMouse);
-      canvas.removeEventListener("mouseleave", handleLeave);
     };
   }, []);
 
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 z-0 pointer-events-auto"
-      style={{ opacity: 0.7 }}
+      className="absolute inset-0 z-0 pointer-events-none"
+      style={{ opacity: 0.9 }}
     />
   );
 }
