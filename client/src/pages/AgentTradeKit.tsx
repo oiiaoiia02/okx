@@ -1,13 +1,18 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Search, Copy, Check, Play, ChevronRight, Terminal, ExternalLink } from "lucide-react";
+import {
+  Search, Copy, Check, Play, ChevronRight, Terminal,
+  Activity, Loader2, ExternalLink,
+} from "lucide-react";
+import { getTicker, getCandles, getOrderbook, getFundingRate } from "@/services/okxApi";
+import SafetyModal from "@/components/SafetyModal";
 
 const MODULES = [
   { id: "market", nameEn: "Market", nameZh: "行情", color: "#22c55e", tools: [
     { name: "market_ticker", desc: "Get real-time ticker", descZh: "获取实时行情", params: [{ name: "instId", type: "string", example: "BTC-USDT" }] },
     { name: "market_orderbook", desc: "Get orderbook depth", descZh: "获取订单簿深度", params: [{ name: "instId", type: "string", example: "ETH-USDT" }, { name: "sz", type: "number", example: "20" }] },
-    { name: "market_candles", desc: "Get candlestick data", descZh: "获取K线数据", params: [{ name: "instId", type: "string", example: "BTC-USDT" }, { name: "bar", type: "string", example: "1H" }, { name: "limit", type: "number", example: "100" }] },
+    { name: "market_candles", desc: "Get candlestick data", descZh: "获取K线数据", params: [{ name: "instId", type: "string", example: "BTC-USDT" }, { name: "bar", type: "string", example: "1H" }, { name: "limit", type: "number", example: "24" }] },
     { name: "market_index_tickers", desc: "Get index tickers", descZh: "获取指数行情", params: [{ name: "instId", type: "string", example: "BTC-USDT" }] },
     { name: "market_funding_rate", desc: "Get funding rate", descZh: "获取资金费率", params: [{ name: "instId", type: "string", example: "BTC-USDT-SWAP" }] },
     { name: "market_open_interest", desc: "Get open interest", descZh: "获取持仓量", params: [{ name: "instType", type: "string", example: "SWAP" }] },
@@ -91,6 +96,47 @@ const MODULES = [
   ]},
 ];
 
+const REAL_API_MAP: Record<string, (p: Record<string, string>) => Promise<any>> = {
+  market_ticker: async (p) => ({ code: "0", data: [await getTicker(p.instId || "BTC-USDT")] }),
+  market_orderbook: async (p) => ({ code: "0", data: [await getOrderbook(p.instId || "BTC-USDT", p.sz || "20")] }),
+  market_candles: async (p) => ({ code: "0", data: await getCandles(p.instId || "BTC-USDT", p.bar || "1H", p.limit || "24") }),
+  market_funding_rate: async (p) => ({ code: "0", data: [await getFundingRate(p.instId || "BTC-USDT-SWAP")] }),
+  market_index_tickers: async (p) => (await fetch(`https://www.okx.com/api/v5/market/index-tickers?instId=${p.instId || "BTC-USDT"}`)).json(),
+  market_open_interest: async (p) => (await fetch(`https://www.okx.com/api/v5/public/open-interest?instType=${p.instType || "SWAP"}`)).json(),
+  market_trades: async (p) => (await fetch(`https://www.okx.com/api/v5/market/trades?instId=${p.instId || "BTC-USDT"}&limit=20`)).json(),
+  market_24h_volume: async (p) => { const t = await getTicker(p.instId || "BTC-USDT"); return { code: "0", data: [{ instId: t.instId, vol24h: t.vol24h, volCcy24h: t.volCcy24h }] }; },
+  market_mark_price: async (p) => (await fetch(`https://www.okx.com/api/v5/public/mark-price?instId=${p.instId || "BTC-USDT-SWAP"}&instType=SWAP`)).json(),
+  market_instruments: async (p) => { const r = await (await fetch(`https://www.okx.com/api/v5/public/instruments?instType=${p.instType || "SPOT"}`)).json(); return { ...r, data: r.data?.slice(0, 20) }; },
+  market_history_candles: async (p) => (await fetch(`https://www.okx.com/api/v5/market/history-candles?instId=${p.instId || "BTC-USDT"}&bar=1D&limit=30`)).json(),
+  market_estimated_price: async (p) => (await fetch(`https://www.okx.com/api/v5/public/estimated-price?instId=${p.instId || "BTC-USDT"}`)).json(),
+};
+
+async function getSimResult(toolName: string, params: Record<string, string>) {
+  let realPrice = "0";
+  const instId = params.instId || "BTC-USDT";
+  try {
+    const base = instId.replace("-SWAP", "").split("-").slice(0, 2).join("-");
+    if (base.includes("-")) { const t = await getTicker(base); realPrice = t.last; }
+  } catch { /* skip */ }
+
+  if (toolName.includes("place_order")) {
+    return { code: "0", msg: "SIMULATED — Connect MCP Server for real execution", data: [{ ordId: `sim-${Date.now()}`, instId, side: params.side || "buy", sz: params.sz || "0.01", fillPx: realPrice, state: "filled", mode: "demo", ts: Date.now().toString() }] };
+  }
+  if (toolName.includes("balance")) {
+    return { code: "0", msg: "SIMULATED", data: [{ totalEq: "100000.00", details: [{ ccy: "USDT", availBal: "50000.00" }, { ccy: "BTC", availBal: "0.5" }, { ccy: "ETH", availBal: "10.0" }] }] };
+  }
+  if (toolName.includes("positions")) {
+    return { code: "0", msg: "SIMULATED", data: [{ instId: "BTC-USDT-SWAP", pos: "1", avgPx: realPrice, upl: "0.00", lever: "10", mgnMode: "cross" }] };
+  }
+  if (toolName.includes("grid_create")) {
+    return { code: "0", msg: "SIMULATED", data: [{ algoId: `grid-${Date.now()}`, instId, gridNum: params.gridNum || "10", state: "running", mode: "demo" }] };
+  }
+  if (toolName.includes("cancel") || toolName.includes("stop")) {
+    return { code: "0", msg: "SIMULATED", data: [{ ordId: params.ordId || params.algoId || "sim-123", state: "cancelled" }] };
+  }
+  return { code: "0", msg: "SIMULATED — This tool requires MCP Server connection for real execution. Use the MCP Payload below with your local MCP server.", data: [{ tool: toolName, params, status: "demo_mode", realPrice, note: "Connect ws://localhost:8765 for live execution" }] };
+}
+
 export default function AgentTradeKit() {
   const { t } = useLanguage();
   const [activeModule, setActiveModule] = useState("market");
@@ -100,6 +146,8 @@ export default function AgentTradeKit() {
   const [copied, setCopied] = useState(false);
   const [executing, setExecuting] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [resultSource, setResultSource] = useState<"real" | "simulated">("simulated");
+  const [showSafety, setShowSafety] = useState(false);
 
   const currentModule = MODULES.find((m) => m.id === activeModule)!;
   const filteredTools = useMemo(() => {
@@ -111,38 +159,46 @@ export default function AgentTradeKit() {
   }, [currentModule, search]);
 
   const totalTools = MODULES.reduce((sum, m) => sum + m.tools.length, 0);
-
   const selectedToolData = currentModule.tools.find((tool) => tool.name === selectedTool);
 
   const generatePayload = () => {
     if (!selectedToolData) return "";
     const params: Record<string, any> = {};
-    selectedToolData.params.forEach((p) => {
-      params[p.name] = paramValues[p.name] || p.example;
-    });
-    return JSON.stringify({ tool: selectedToolData.name, params }, null, 2);
+    selectedToolData.params.forEach((p) => { params[p.name] = paramValues[p.name] || p.example; });
+    return JSON.stringify({ tool: selectedToolData.name, params, mode: "demo" }, null, 2);
   };
 
   const generateCLI = () => {
     if (!selectedToolData) return "";
     const parts = selectedToolData.name.split("_");
-    const module = parts[0];
-    const action = parts.slice(1).join("-");
     const args = selectedToolData.params.map((p) => `--${p.name} ${paramValues[p.name] || p.example}`).join(" ");
-    return `okx ${module} ${action} ${args}`.trim();
+    return `okx-agent ${parts[0]} ${parts.slice(1).join("-")} ${args} --demo`.trim();
   };
 
-  const handleExecute = () => {
+  const handleExecute = async () => {
+    if (!selectedToolData) return;
     setExecuting(true);
     setResult(null);
-    setTimeout(() => {
-      setResult(JSON.stringify({
-        code: "0",
-        msg: "",
-        data: [{ instId: paramValues["instId"] || "BTC-USDT", last: "87432.50", vol24h: "12345.67", ts: Date.now().toString() }],
-      }, null, 2));
-      setExecuting(false);
-    }, 1500);
+
+    const resolvedParams: Record<string, string> = {};
+    selectedToolData.params.forEach((p) => { resolvedParams[p.name] = paramValues[p.name] || p.example; });
+
+    const realHandler = REAL_API_MAP[selectedToolData.name];
+    if (realHandler) {
+      try {
+        const data = await realHandler(resolvedParams);
+        setResult(JSON.stringify(data, null, 2));
+        setResultSource("real");
+      } catch (err: any) {
+        setResult(JSON.stringify({ error: err.message, note: "OKX API error. Check parameters." }, null, 2));
+        setResultSource("real");
+      }
+    } else {
+      const simResult = await getSimResult(selectedToolData.name, resolvedParams);
+      setResult(JSON.stringify(simResult, null, 2));
+      setResultSource("simulated");
+    }
+    setExecuting(false);
   };
 
   const copyText = (text: string) => {
@@ -154,7 +210,8 @@ export default function AgentTradeKit() {
   return (
     <div className="min-h-screen py-8 px-4">
       <div className="container">
-        {/* Header */}
+        <SafetyModal open={showSafety} onConfirm={() => { setShowSafety(false); handleExecute(); }} onCancel={() => setShowSafety(false)} tool={selectedTool || ""} params={paramValues} />
+
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
             <Terminal className="w-4 h-4" />
@@ -164,22 +221,15 @@ export default function AgentTradeKit() {
           </div>
           <h1 className="text-3xl font-bold mb-2">Agent Trade Kit</h1>
           <p className="text-muted-foreground">
-            {t(`${totalTools} tools across ${MODULES.length} modules — full trading lifecycle coverage.`, `${totalTools}个工具覆盖${MODULES.length}大模块——完整交易生命周期。`)}
+            {t(`${totalTools} tools across ${MODULES.length} modules. Market tools execute against real OKX V5 API.`, `${totalTools}个工具覆盖${MODULES.length}大模块。行情工具直接调用OKX V5真实API。`)}
           </p>
         </motion.div>
 
         {/* Module Tabs */}
         <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6 scrollbar-hide">
           {MODULES.map((mod) => (
-            <button
-              key={mod.id}
-              onClick={() => { setActiveModule(mod.id); setSelectedTool(null); setSearch(""); }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-                activeModule === mod.id
-                  ? "bg-primary/10 text-primary border border-primary/20"
-                  : "text-muted-foreground hover:text-foreground border border-transparent hover:bg-accent/50"
-              }`}
-            >
+            <button key={mod.id} onClick={() => { setActiveModule(mod.id); setSelectedTool(null); setSearch(""); setResult(null); }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${activeModule === mod.id ? "bg-primary/10 text-primary border border-primary/20" : "text-muted-foreground hover:text-foreground border border-transparent hover:bg-accent/50"}`}>
               <span className="w-2 h-2 rounded-full" style={{ background: mod.color }} />
               {t(mod.nameEn, mod.nameZh)}
               <span className="text-xs opacity-60">{mod.tools.length}</span>
@@ -192,27 +242,19 @@ export default function AgentTradeKit() {
           <div className="lg:col-span-1">
             <div className="relative mb-4">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
                 placeholder={t("Search tools...", "搜索工具...")}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border/50 bg-card/80 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 text-foreground placeholder:text-muted-foreground"
-              />
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border/50 bg-card/80 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground" />
             </div>
             <div className="space-y-1 max-h-[600px] overflow-y-auto pr-2">
               {filteredTools.map((tool) => (
-                <button
-                  key={tool.name}
-                  onClick={() => { setSelectedTool(tool.name); setParamValues({}); setResult(null); }}
-                  className={`w-full text-left px-4 py-3 rounded-xl text-sm transition-all ${
-                    selectedTool === tool.name
-                      ? "bg-primary/10 border border-primary/20"
-                      : "hover:bg-accent/50 border border-transparent"
-                  }`}
-                >
-                  <div className="font-mono text-xs text-primary mb-1">{tool.name}</div>
-                  <div className="text-muted-foreground text-xs">{t(tool.desc, tool.descZh)}</div>
+                <button key={tool.name} onClick={() => { setSelectedTool(tool.name); setParamValues({}); setResult(null); }}
+                  className={`w-full text-left px-4 py-3 rounded-xl text-sm transition-all ${selectedTool === tool.name ? "bg-primary/10 border border-primary/20" : "hover:bg-accent/50 border border-transparent"}`}>
+                  <div className="flex items-center gap-2">
+                    <div className="font-mono text-xs text-primary flex-1">{tool.name}</div>
+                    {REAL_API_MAP[tool.name] && <span className="text-[9px] px-1.5 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20">LIVE</span>}
+                  </div>
+                  <div className="text-muted-foreground text-xs mt-1">{t(tool.desc, tool.descZh)}</div>
                 </button>
               ))}
             </div>
@@ -222,38 +264,36 @@ export default function AgentTradeKit() {
           <div className="lg:col-span-2">
             {selectedToolData ? (
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-                {/* Params Form */}
                 <div className="glass-card p-6">
-                  <h3 className="font-semibold mb-4 flex items-center gap-2">
-                    <span className="font-mono text-primary">{selectedToolData.name}</span>
-                  </h3>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-mono text-primary font-semibold">{selectedToolData.name}</h3>
+                    {REAL_API_MAP[selectedToolData.name] ? (
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20 flex items-center gap-1">
+                        <Activity className="w-3 h-3" /> Real OKX API
+                      </span>
+                    ) : (
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+                        Requires MCP Server
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground mb-4">{t(selectedToolData.desc, selectedToolData.descZh)}</p>
                   {selectedToolData.params.length > 0 && (
                     <div className="space-y-3">
                       {selectedToolData.params.map((p) => (
                         <div key={p.name}>
-                          <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                            {p.name} <span className="text-xs opacity-50">({p.type})</span>
-                          </label>
-                          <input
-                            type="text"
-                            value={paramValues[p.name] || ""}
-                            onChange={(e) => setParamValues({ ...paramValues, [p.name]: e.target.value })}
-                            placeholder={p.example}
-                            className="w-full px-3 py-2 rounded-lg border border-border/50 bg-background text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground"
-                          />
+                          <label className="text-xs font-medium text-muted-foreground mb-1 block">{p.name} <span className="text-xs opacity-50">({p.type})</span></label>
+                          <input type="text" value={paramValues[p.name] || ""} onChange={(e) => setParamValues({ ...paramValues, [p.name]: e.target.value })} placeholder={p.example}
+                            className="w-full px-3 py-2 rounded-lg border border-border/50 bg-background text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground" />
                         </div>
                       ))}
                     </div>
                   )}
                   <div className="mt-4 flex gap-2">
-                    <button
-                      onClick={handleExecute}
-                      disabled={executing}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
-                    >
-                      <Play className="w-3.5 h-3.5" />
-                      {executing ? t("Executing...", "执行中...") : t("Simulate Execute", "模拟执行")}
+                    <button onClick={handleExecute} disabled={executing}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
+                      {executing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+                      {executing ? t("Calling OKX API...", "调用OKX API...") : REAL_API_MAP[selectedToolData.name] ? t("Execute (Real API)", "执行 (真实API)") : t("Simulate Execute", "模拟执行")}
                     </button>
                   </div>
                 </div>
@@ -262,9 +302,8 @@ export default function AgentTradeKit() {
                 <div className="glass-card overflow-hidden">
                   <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
                     <span className="text-xs font-medium text-muted-foreground">MCP JSON Payload</span>
-                    <button onClick={() => copyText(generatePayload())} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                      {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
-                      {t("Copy", "复制")}
+                    <button onClick={() => copyText(generatePayload())} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+                      {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />} {t("Copy", "复制")}
                     </button>
                   </div>
                   <pre className="p-4 text-xs font-mono text-green-400 overflow-x-auto">{generatePayload()}</pre>
@@ -274,9 +313,8 @@ export default function AgentTradeKit() {
                 <div className="glass-card overflow-hidden">
                   <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
                     <span className="text-xs font-medium text-muted-foreground">CLI Command</span>
-                    <button onClick={() => copyText(generateCLI())} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                      {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
-                      {t("Copy", "复制")}
+                    <button onClick={() => copyText(generateCLI())} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+                      {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />} {t("Copy", "复制")}
                     </button>
                   </div>
                   <div className="p-4 font-mono text-xs text-primary">$ {generateCLI()}</div>
@@ -285,18 +323,28 @@ export default function AgentTradeKit() {
                 {/* Result */}
                 {result && (
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card overflow-hidden">
-                    <div className="px-4 py-3 border-b border-border/50 flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-green-400" />
-                      <span className="text-xs font-medium text-muted-foreground">{t("Simulation Result", "模拟结果")}</span>
+                    <div className="px-4 py-3 border-b border-border/50 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${resultSource === "real" ? "bg-green-400" : "bg-yellow-400"}`} />
+                        <span className="text-xs font-medium text-muted-foreground">
+                          {resultSource === "real" ? t("Real OKX API Response", "OKX真实API响应") : t("Simulated Response (Demo)", "模拟响应 (Demo)")}
+                        </span>
+                      </div>
+                      {resultSource === "real" && (
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-green-500/10 text-green-400 flex items-center gap-1">
+                          <Activity className="w-3 h-3" /> {t("Data from OKX V5 Official API", "数据来自OKX V5官方API")}
+                        </span>
+                      )}
                     </div>
-                    <pre className="p-4 text-xs font-mono text-foreground/80 overflow-x-auto">{result}</pre>
+                    <pre className="p-4 text-xs font-mono text-foreground/80 overflow-x-auto max-h-96 overflow-y-auto">{result}</pre>
                   </motion.div>
                 )}
               </motion.div>
             ) : (
               <div className="glass-card p-12 text-center">
                 <Terminal className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-                <p className="text-muted-foreground">{t("Select a tool to view details", "选择一个工具查看详情")}</p>
+                <p className="text-muted-foreground">{t("Select a tool to view details and execute", "选择一个工具查看详情并执行")}</p>
+                <p className="text-xs text-muted-foreground/60 mt-2">{t("Market tools return real OKX data. Trade tools require MCP Server.", "行情工具返回OKX真实数据。交易工具需要MCP Server。")}</p>
               </div>
             )}
           </div>

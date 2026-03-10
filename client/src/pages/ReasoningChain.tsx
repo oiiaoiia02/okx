@@ -1,42 +1,130 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Brain, ChevronRight, Play, RotateCcw, CheckCircle, Loader2, AlertCircle, ArrowDown } from "lucide-react";
+import { Brain, ChevronRight, Play, RotateCcw, CheckCircle, Loader2, AlertCircle, ArrowDown, Activity, Sparkles } from "lucide-react";
+import { getTicker, getFundingRate, formatPrice } from "@/services/okxApi";
 
 interface Step {
-  id: number; type: "think" | "tool_call" | "result" | "decision";
-  titleEn: string; titleZh: string; contentEn: string; contentZh: string;
-  status: "pending" | "running" | "done" | "error"; duration?: number;
+  id: number;
+  type: "think" | "tool_call" | "result" | "decision";
+  titleEn: string;
+  titleZh: string;
+  contentEn: string;
+  contentZh: string;
+  status: "pending" | "running" | "done" | "error";
+  duration?: number;
+  isLive?: boolean;
 }
 
-const DEMO_CHAINS = [
+interface Chain {
+  nameEn: string;
+  nameZh: string;
+  inputEn: string;
+  inputZh: string;
+  generateSteps: () => Promise<Step[]>;
+}
+
+// Dynamic chain generators that fetch real data
+const CHAINS: Chain[] = [
   {
-    nameEn: "Buy BTC with Risk Check",
-    nameZh: "买入BTC并检查风险",
+    nameEn: "Buy BTC with Risk Check", nameZh: "买入BTC并检查风险",
     inputEn: "Buy 0.1 BTC at market price, but check if it's a good time first",
     inputZh: "市价买入0.1 BTC，但先检查现在是否是好时机",
-    steps: [
-      { id: 1, type: "think" as const, titleEn: "Analyzing request", titleZh: "分析请求", contentEn: "User wants to buy 0.1 BTC. Need to check market conditions first before executing.", contentZh: "用户想买入0.1 BTC。需要先检查市场状况再执行。", status: "done" as const, duration: 320 },
-      { id: 2, type: "tool_call" as const, titleEn: "market_ticker(BTC-USDT)", titleZh: "market_ticker(BTC-USDT)", contentEn: "Fetching current BTC price and 24h change...\nResult: { last: \"87,432.50\", change24h: \"+1.82%\", vol24h: \"$12.3B\" }", contentZh: "获取当前BTC价格和24小时变化...\n结果: { last: \"87,432.50\", change24h: \"+1.82%\", vol24h: \"$12.3B\" }", status: "done" as const, duration: 180 },
-      { id: 3, type: "tool_call" as const, titleEn: "market_funding_rate(BTC-USDT-SWAP)", titleZh: "market_funding_rate(BTC-USDT-SWAP)", contentEn: "Checking funding rate for sentiment...\nResult: { fundingRate: \"0.0001\", nextFundingTime: \"2024-03-15T08:00:00Z\" }", contentZh: "检查资金费率了解市场情绪...\n结果: { fundingRate: \"0.0001\", nextFundingTime: \"2024-03-15T08:00:00Z\" }", status: "done" as const, duration: 150 },
-      { id: 4, type: "think" as const, titleEn: "Risk assessment", titleZh: "风险评估", contentEn: "BTC is up 1.82% in 24h, volume is healthy at $12.3B. Funding rate is neutral (0.01%). No extreme conditions detected. Safe to proceed with market buy.", contentZh: "BTC 24小时上涨1.82%，成交量$12.3B健康。资金费率中性(0.01%)。未检测到极端条件。可以安全执行市价买入。", status: "done" as const, duration: 250 },
-      { id: 5, type: "decision" as const, titleEn: "Execute: Market Buy 0.1 BTC", titleZh: "执行: 市价买入 0.1 BTC", contentEn: "Conditions are favorable. Executing market buy order for 0.1 BTC-USDT.", contentZh: "条件有利。执行0.1 BTC-USDT市价买入订单。", status: "done" as const, duration: 100 },
-      { id: 6, type: "tool_call" as const, titleEn: "spot_place_order(BTC-USDT, buy, 0.1)", titleZh: "spot_place_order(BTC-USDT, buy, 0.1)", contentEn: "Order placed successfully.\nResult: { ordId: \"5678901234\", avgPx: \"87,432.50\", fillSz: \"0.1\", state: \"filled\" }", contentZh: "订单成功下达。\n结果: { ordId: \"5678901234\", avgPx: \"87,432.50\", fillSz: \"0.1\", state: \"filled\" }", status: "done" as const, duration: 200 },
-      { id: 7, type: "result" as const, titleEn: "Order Complete", titleZh: "订单完成", contentEn: "Successfully bought 0.1 BTC at $87,432.50. Total cost: $8,743.25. Market conditions were favorable with neutral funding and healthy volume.", contentZh: "成功以$87,432.50买入0.1 BTC。总成本: $8,743.25。市场条件有利，资金费率中性，成交量健康。", status: "done" as const, duration: 50 },
-    ],
+    generateSteps: async () => {
+      const steps: Step[] = [];
+      steps.push({ id: 1, type: "think", titleEn: "Analyzing request", titleZh: "分析请求", contentEn: "User wants to buy 0.1 BTC. Need to check market conditions first before executing.", contentZh: "用户想买入0.1 BTC。需要先检查市场状况再执行。", status: "done", duration: 320 });
+
+      try {
+        const ticker = await getTicker("BTC-USDT");
+        const price = parseFloat(ticker.last);
+        const open = parseFloat(ticker.open24h);
+        const change = ((price - open) / open * 100).toFixed(2);
+        const vol = parseFloat(ticker.volCcy24h);
+        steps.push({ id: 2, type: "tool_call", titleEn: "market_ticker(BTC-USDT)", titleZh: "market_ticker(BTC-USDT)", contentEn: `Fetching current BTC price from OKX V5 API...\nResult: { last: "${formatPrice(price)}", change24h: "${change}%", vol24h: "$${(vol / 1e9).toFixed(1)}B" }`, contentZh: `从OKX V5 API获取当前BTC价格...\n结果: { last: "${formatPrice(price)}", change24h: "${change}%", vol24h: "$${(vol / 1e9).toFixed(1)}B" }`, status: "done", duration: 180, isLive: true });
+
+        let fundingStr = "N/A";
+        try {
+          const funding = await getFundingRate("BTC-USDT-SWAP");
+          fundingStr = (parseFloat(funding.fundingRate) * 100).toFixed(4) + "%";
+          steps.push({ id: 3, type: "tool_call", titleEn: "market_funding_rate(BTC-USDT-SWAP)", titleZh: "market_funding_rate(BTC-USDT-SWAP)", contentEn: `Checking funding rate...\nResult: { fundingRate: "${fundingStr}" }`, contentZh: `检查资金费率...\n结果: { fundingRate: "${fundingStr}" }`, status: "done", duration: 150, isLive: true });
+        } catch { /* skip */ }
+
+        const isBullish = parseFloat(change) > 0;
+        const isHighVol = vol > 5e9;
+        steps.push({ id: 4, type: "think", titleEn: "Risk assessment", titleZh: "风险评估", contentEn: `BTC is ${isBullish ? "up" : "down"} ${change}% in 24h. Volume is ${isHighVol ? "healthy" : "moderate"} at $${(vol / 1e9).toFixed(1)}B. Funding rate: ${fundingStr}. ${isBullish && isHighVol ? "Conditions favorable." : "Proceed with caution."}`, contentZh: `BTC 24小时${isBullish ? "上涨" : "下跌"}${change}%。成交量$${(vol / 1e9).toFixed(1)}B${isHighVol ? "健康" : "一般"}。资金费率: ${fundingStr}。${isBullish && isHighVol ? "条件有利。" : "需谨慎操作。"}`, status: "done", duration: 250 });
+
+        steps.push({ id: 5, type: "decision", titleEn: "Execute: Market Buy 0.1 BTC", titleZh: "执行: 市价买入 0.1 BTC", contentEn: `Executing market buy for 0.1 BTC at ~$${formatPrice(price)}.`, contentZh: `执行市价买入0.1 BTC，约$${formatPrice(price)}。`, status: "done", duration: 100 });
+
+        const cost = (price * 0.1).toFixed(2);
+        steps.push({ id: 6, type: "tool_call", titleEn: "spot_place_order(BTC-USDT, buy, 0.1)", titleZh: "spot_place_order(BTC-USDT, buy, 0.1)", contentEn: `[SIMULATED — Requires MCP Server for real execution]\nResult: { ordId: "sim-${Date.now()}", avgPx: "${formatPrice(price)}", fillSz: "0.1", state: "filled" }`, contentZh: `[模拟 — 需要MCP Server进行真实执行]\n结果: { ordId: "sim-${Date.now()}", avgPx: "${formatPrice(price)}", fillSz: "0.1", state: "filled" }`, status: "done", duration: 200 });
+
+        steps.push({ id: 7, type: "result", titleEn: "Order Complete", titleZh: "订单完成", contentEn: `Bought 0.1 BTC at $${formatPrice(price)}. Total cost: $${cost}. Market: ${isBullish ? "bullish" : "bearish"} with ${isHighVol ? "strong" : "moderate"} volume.`, contentZh: `以$${formatPrice(price)}买入0.1 BTC。总成本: $${cost}。市场: ${isBullish ? "看涨" : "看跌"}，成交量${isHighVol ? "强劲" : "一般"}。`, status: "done", duration: 50 });
+      } catch (err: any) {
+        steps.push({ id: 2, type: "tool_call", titleEn: "market_ticker(BTC-USDT)", titleZh: "market_ticker(BTC-USDT)", contentEn: `Error: ${err.message}`, contentZh: `错误: ${err.message}`, status: "error", duration: 0 });
+      }
+      return steps;
+    },
   },
   {
-    nameEn: "Grid Bot Setup with Validation",
-    nameZh: "网格机器人设置与验证",
-    inputEn: "Create an ETH grid bot between $3,200-$3,800 with $1,000",
-    inputZh: "创建ETH网格机器人，区间$3,200-$3,800，投入$1,000",
-    steps: [
-      { id: 1, type: "think" as const, titleEn: "Parsing grid parameters", titleZh: "解析网格参数", contentEn: "User wants grid bot: ETH-USDT, range $3,200-$3,800, investment $1,000. Need to validate current price is within range.", contentZh: "用户想创建网格机器人: ETH-USDT, 区间$3,200-$3,800, 投入$1,000。需要验证当前价格在区间内。", status: "done" as const, duration: 200 },
-      { id: 2, type: "tool_call" as const, titleEn: "market_ticker(ETH-USDT)", titleZh: "market_ticker(ETH-USDT)", contentEn: "Result: { last: \"3,487.20\", change24h: \"+0.85%\" }", contentZh: "结果: { last: \"3,487.20\", change24h: \"+0.85%\" }", status: "done" as const, duration: 120 },
-      { id: 3, type: "think" as const, titleEn: "Validating parameters", titleZh: "验证参数", contentEn: "Current ETH price $3,487.20 is within range [$3,200, $3,800]. Grid spacing: $60 per grid (10 grids). Each grid order ≈ $100. Parameters are valid.", contentZh: "当前ETH价格$3,487.20在区间[$3,200, $3,800]内。网格间距: 每格$60 (10格)。每格订单≈$100。参数有效。", status: "done" as const, duration: 180 },
-      { id: 4, type: "tool_call" as const, titleEn: "bot_grid_create(ETH-USDT, 10, 3200, 3800)", titleZh: "bot_grid_create(ETH-USDT, 10, 3200, 3800)", contentEn: "Result: { algoId: \"grid_001\", state: \"running\", gridNum: 10 }", contentZh: "结果: { algoId: \"grid_001\", state: \"running\", gridNum: 10 }", status: "done" as const, duration: 250 },
-      { id: 5, type: "result" as const, titleEn: "Grid Bot Active", titleZh: "网格机器人已激活", contentEn: "ETH-USDT grid bot created successfully. 10 grids from $3,200 to $3,800. Investment: $1,000. Bot ID: grid_001.", contentZh: "ETH-USDT网格机器人创建成功。10格，区间$3,200-$3,800。投入: $1,000。Bot ID: grid_001。", status: "done" as const, duration: 50 },
-    ],
+    nameEn: "ETH Grid Bot Setup", nameZh: "ETH网格机器人设置",
+    inputEn: "Create an ETH grid bot between $2,800-$3,500 with 10 grids",
+    inputZh: "创建ETH网格机器人，区间$2,800-$3,500，10个格子",
+    generateSteps: async () => {
+      const steps: Step[] = [];
+      steps.push({ id: 1, type: "think", titleEn: "Parsing grid parameters", titleZh: "解析网格参数", contentEn: "User wants grid bot: ETH-USDT, range $2,800-$3,500, 10 grids. Need to validate current price is within range.", contentZh: "用户想创建网格机器人: ETH-USDT, 区间$2,800-$3,500, 10格。需要验证当前价格在区间内。", status: "done", duration: 200 });
+
+      try {
+        const ticker = await getTicker("ETH-USDT");
+        const price = parseFloat(ticker.last);
+        const inRange = price >= 2800 && price <= 3500;
+        steps.push({ id: 2, type: "tool_call", titleEn: "market_ticker(ETH-USDT)", titleZh: "market_ticker(ETH-USDT)", contentEn: `Real OKX data: { last: "${formatPrice(price)}", change24h: "${((price - parseFloat(ticker.open24h)) / parseFloat(ticker.open24h) * 100).toFixed(2)}%" }`, contentZh: `OKX真实数据: { last: "${formatPrice(price)}", change24h: "${((price - parseFloat(ticker.open24h)) / parseFloat(ticker.open24h) * 100).toFixed(2)}%" }`, status: "done", duration: 120, isLive: true });
+
+        const gridSpacing = ((3500 - 2800) / 10).toFixed(0);
+        steps.push({ id: 3, type: "think", titleEn: "Validating parameters", titleZh: "验证参数", contentEn: `Current ETH price $${formatPrice(price)} is ${inRange ? "within" : "OUTSIDE"} range [$2,800, $3,500]. Grid spacing: $${gridSpacing} per grid. ${inRange ? "Parameters valid." : "WARNING: Price outside grid range!"}`, contentZh: `当前ETH价格$${formatPrice(price)}${inRange ? "在" : "不在"}区间[$2,800, $3,500]内。网格间距: $${gridSpacing}。${inRange ? "参数有效。" : "警告: 价格超出网格区间!"}`, status: "done", duration: 180 });
+
+        if (inRange) {
+          steps.push({ id: 4, type: "tool_call", titleEn: "bot_grid_create(ETH-USDT, 10, 2800, 3500)", titleZh: "bot_grid_create(ETH-USDT, 10, 2800, 3500)", contentEn: `[SIMULATED] Result: { algoId: "grid-${Date.now()}", state: "running", gridNum: 10 }`, contentZh: `[模拟] 结果: { algoId: "grid-${Date.now()}", state: "running", gridNum: 10 }`, status: "done", duration: 250 });
+          steps.push({ id: 5, type: "result", titleEn: "Grid Bot Active", titleZh: "网格机器人已激活", contentEn: `ETH-USDT grid bot created. 10 grids from $2,800 to $3,500. Current price: $${formatPrice(price)}.`, contentZh: `ETH-USDT网格机器人创建成功。10格，区间$2,800-$3,500。当前价格: $${formatPrice(price)}。`, status: "done", duration: 50 });
+        } else {
+          steps.push({ id: 4, type: "decision", titleEn: "Adjust grid range", titleZh: "调整网格区间", contentEn: `Current price $${formatPrice(price)} is outside the requested range. Suggesting adjusted range: $${(price * 0.9).toFixed(0)}-$${(price * 1.1).toFixed(0)}.`, contentZh: `当前价格$${formatPrice(price)}超出请求区间。建议调整区间: $${(price * 0.9).toFixed(0)}-$${(price * 1.1).toFixed(0)}。`, status: "done", duration: 200 });
+        }
+      } catch (err: any) {
+        steps.push({ id: 2, type: "tool_call", titleEn: "market_ticker(ETH-USDT)", titleZh: "market_ticker(ETH-USDT)", contentEn: `Error: ${err.message}`, contentZh: `错误: ${err.message}`, status: "error" });
+      }
+      return steps;
+    },
+  },
+  {
+    nameEn: "Multi-Asset Price Scan", nameZh: "多资产价格扫描",
+    inputEn: "Compare BTC, ETH, SOL prices and tell me which is performing best today",
+    inputZh: "对比BTC、ETH、SOL价格，告诉我今天哪个表现最好",
+    generateSteps: async () => {
+      const steps: Step[] = [];
+      steps.push({ id: 1, type: "think", titleEn: "Planning multi-asset scan", titleZh: "规划多资产扫描", contentEn: "Need to fetch real-time data for BTC, ETH, SOL from OKX and compare 24h performance.", contentZh: "需要从OKX获取BTC、ETH、SOL的实时数据并对比24小时表现。", status: "done", duration: 150 });
+
+      const results: { token: string; price: number; change: number }[] = [];
+      let stepId = 2;
+      for (const pair of ["BTC-USDT", "ETH-USDT", "SOL-USDT"]) {
+        try {
+          const ticker = await getTicker(pair);
+          const price = parseFloat(ticker.last);
+          const change = ((price - parseFloat(ticker.open24h)) / parseFloat(ticker.open24h) * 100);
+          results.push({ token: pair.split("-")[0], price, change });
+          steps.push({ id: stepId++, type: "tool_call", titleEn: `market_ticker(${pair})`, titleZh: `market_ticker(${pair})`, contentEn: `Real OKX: { last: "$${formatPrice(price)}", change24h: "${change.toFixed(2)}%" }`, contentZh: `OKX真实: { last: "$${formatPrice(price)}", change24h: "${change.toFixed(2)}%" }`, status: "done", duration: 120, isLive: true });
+        } catch {
+          steps.push({ id: stepId++, type: "tool_call", titleEn: `market_ticker(${pair})`, titleZh: `market_ticker(${pair})`, contentEn: "Failed to fetch", contentZh: "获取失败", status: "error" });
+        }
+      }
+
+      if (results.length > 0) {
+        const best = results.reduce((a, b) => a.change > b.change ? a : b);
+        const worst = results.reduce((a, b) => a.change < b.change ? a : b);
+        const summary = results.map((r) => `${r.token}: $${formatPrice(r.price)} (${r.change >= 0 ? "+" : ""}${r.change.toFixed(2)}%)`).join("\n");
+        steps.push({ id: stepId++, type: "think", titleEn: "Comparing performance", titleZh: "对比表现", contentEn: `Performance ranking:\n${summary}\n\nBest: ${best.token} (${best.change >= 0 ? "+" : ""}${best.change.toFixed(2)}%)\nWorst: ${worst.token} (${worst.change >= 0 ? "+" : ""}${worst.change.toFixed(2)}%)`, contentZh: `表现排名:\n${summary}\n\n最佳: ${best.token} (${best.change >= 0 ? "+" : ""}${best.change.toFixed(2)}%)\n最差: ${worst.token} (${worst.change >= 0 ? "+" : ""}${worst.change.toFixed(2)}%)`, status: "done", duration: 200 });
+        steps.push({ id: stepId++, type: "result", titleEn: `${best.token} leads today`, titleZh: `${best.token}今日领涨`, contentEn: `${best.token} is the best performer at ${best.change >= 0 ? "+" : ""}${best.change.toFixed(2)}%. All data from OKX V5 real-time API.`, contentZh: `${best.token}表现最佳，涨幅${best.change >= 0 ? "+" : ""}${best.change.toFixed(2)}%。所有数据来自OKX V5实时API。`, status: "done", duration: 50 });
+      }
+      return steps;
+    },
   },
 ];
 
@@ -44,26 +132,34 @@ export default function ReasoningChain() {
   const { t } = useLanguage();
   const [activeChain, setActiveChain] = useState(0);
   const [animating, setAnimating] = useState(false);
-  const [visibleSteps, setVisibleSteps] = useState<number>(0);
+  const [steps, setSteps] = useState<Step[]>([]);
+  const [visibleSteps, setVisibleSteps] = useState(0);
+  const cancelRef = useRef(false);
 
-  const chain = DEMO_CHAINS[activeChain];
+  const chain = CHAINS[activeChain];
 
-  const startAnimation = () => {
+  const startAnimation = async () => {
     setAnimating(true);
     setVisibleSteps(0);
-    let step = 0;
-    const interval = setInterval(() => {
-      step++;
-      setVisibleSteps(step);
-      if (step >= chain.steps.length) {
-        clearInterval(interval);
-        setAnimating(false);
-      }
-    }, 800);
+    setSteps([]);
+    cancelRef.current = false;
+
+    const generatedSteps = await chain.generateSteps();
+    if (cancelRef.current) return;
+    setSteps(generatedSteps);
+
+    for (let i = 1; i <= generatedSteps.length; i++) {
+      if (cancelRef.current) return;
+      await new Promise((r) => setTimeout(r, 600));
+      setVisibleSteps(i);
+    }
+    setAnimating(false);
   };
 
   const reset = () => {
+    cancelRef.current = true;
     setVisibleSteps(0);
+    setSteps([]);
     setAnimating(false);
   };
 
@@ -96,68 +192,51 @@ export default function ReasoningChain() {
             <span className="text-foreground">{t("Reasoning Chain", "推理链")}</span>
           </div>
           <h1 className="text-3xl font-bold mb-2">{t("Agent Reasoning Chain", "Agent 推理链可视化")}</h1>
-          <p className="text-muted-foreground">{t("Watch the AI agent think step by step.", "观看AI Agent逐步思考过程。")}</p>
+          <p className="text-muted-foreground">
+            {t("Watch the AI agent think step by step with real OKX market data.", "观看AI Agent逐步思考过程，使用OKX真实行情数据。")}
+          </p>
         </motion.div>
 
-        {/* Chain Selector */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          {DEMO_CHAINS.map((c, i) => (
-            <button
-              key={i}
-              onClick={() => setActiveChain(i)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-                activeChain === i ? "bg-primary/10 text-primary border border-primary/20" : "text-muted-foreground hover:text-foreground border border-transparent hover:bg-accent/50"
-              }`}
-            >
+          {CHAINS.map((c, i) => (
+            <button key={i} onClick={() => setActiveChain(i)}
+              className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${activeChain === i ? "bg-primary/10 text-primary border border-primary/20" : "text-muted-foreground hover:text-foreground border border-transparent hover:bg-accent/50"}`}>
               {t(c.nameEn, c.nameZh)}
             </button>
           ))}
         </div>
 
-        {/* Input */}
         <div className="glass-card p-5 mb-6">
           <p className="text-xs text-muted-foreground mb-2">{t("User Input", "用户输入")}</p>
           <p className="text-lg font-medium">{t(chain.inputEn, chain.inputZh)}</p>
         </div>
 
-        {/* Controls */}
         <div className="flex gap-2 mb-6">
-          <button
-            onClick={startAnimation}
-            disabled={animating}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
-          >
-            <Play className="w-4 h-4" />
-            {animating ? t("Running...", "运行中...") : t("Start Reasoning", "开始推理")}
+          <button onClick={startAnimation} disabled={animating}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
+            {animating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+            {animating ? t("Fetching real data...", "获取真实数据...") : t("Start Reasoning", "开始推理")}
           </button>
           <button onClick={reset} className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border/50 text-sm font-medium hover:bg-accent/50 transition-colors">
-            <RotateCcw className="w-4 h-4" />
-            {t("Reset", "重置")}
+            <RotateCcw className="w-4 h-4" /> {t("Reset", "重置")}
           </button>
         </div>
 
-        {/* Steps */}
         <div className="space-y-3">
           <AnimatePresence>
-            {chain.steps.slice(0, visibleSteps).map((step, i) => (
-              <motion.div
-                key={step.id}
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-              >
-                {i > 0 && (
-                  <div className="flex justify-center my-2">
-                    <ArrowDown className="w-4 h-4 text-muted-foreground/40" />
-                  </div>
-                )}
+            {steps.slice(0, visibleSteps).map((step, i) => (
+              <motion.div key={step.id} initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.4, ease: "easeOut" }}>
+                {i > 0 && <div className="flex justify-center my-2"><ArrowDown className="w-4 h-4 text-muted-foreground/40" /></div>}
                 <div className={`glass-card p-5 border-l-2 ${stepColor(step.type)}`}>
                   <div className="flex items-center gap-3 mb-3">
-                    {stepIcon(step.type, i === visibleSteps - 1 && animating ? "running" : "done")}
+                    {stepIcon(step.type, i === visibleSteps - 1 && animating ? "running" : step.status)}
                     <span className="text-sm font-semibold">{t(step.titleEn, step.titleZh)}</span>
-                    {step.duration && (
-                      <span className="text-[10px] text-muted-foreground ml-auto">{step.duration}ms</span>
+                    {step.isLive && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20 flex items-center gap-1">
+                        <Activity className="w-2.5 h-2.5" /> LIVE
+                      </span>
                     )}
+                    {step.duration && <span className="text-[10px] text-muted-foreground ml-auto">{step.duration}ms</span>}
                   </div>
                   <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed">{t(step.contentEn, step.contentZh)}</pre>
                 </div>
@@ -168,8 +247,8 @@ export default function ReasoningChain() {
 
         {visibleSteps === 0 && !animating && (
           <div className="glass-card p-12 text-center">
-            <Brain className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-            <p className="text-muted-foreground">{t("Click 'Start Reasoning' to watch the agent think", "点击'开始推理'观看Agent思考过程")}</p>
+            <Sparkles className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+            <p className="text-muted-foreground">{t("Click 'Start Reasoning' to watch the agent think with real OKX data", "点击'开始推理'观看Agent使用OKX真实数据思考")}</p>
           </div>
         )}
       </div>
