@@ -222,26 +222,70 @@ export default function ReasoningChain() {
           </button>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-0 relative">
+          {/* Neural connection line */}
+          {visibleSteps > 1 && (
+            <div className="absolute left-[23px] top-0 bottom-0 w-[2px] z-0">
+              <motion.div
+                initial={{ height: 0 }}
+                animate={{ height: "100%" }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                className="w-full rounded-full"
+                style={{ background: "linear-gradient(180deg, rgba(0, 230, 138, 0.3), rgba(79, 143, 255, 0.2), rgba(167, 139, 250, 0.15), transparent)" }}
+              />
+            </div>
+          )}
           <AnimatePresence>
-            {steps.slice(0, visibleSteps).map((step, i) => (
-              <motion.div key={step.id} initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.4, ease: "easeOut" }}>
-                {i > 0 && <div className="flex justify-center my-2"><ArrowDown className="w-4 h-4 text-muted-foreground/40" /></div>}
-                <div className={`glass-card p-5 border-l-2 ${stepColor(step.type)}`}>
-                  <div className="flex items-center gap-3 mb-3">
-                    {stepIcon(step.type, i === visibleSteps - 1 && animating ? "running" : step.status)}
-                    <span className="text-sm font-semibold">{t(step.titleEn, step.titleZh)}</span>
-                    {step.isLive && (
-                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20 flex items-center gap-1">
-                        <Activity className="w-2.5 h-2.5" /> LIVE
-                      </span>
-                    )}
-                    {step.duration && <span className="text-[10px] text-muted-foreground ml-auto">{step.duration}ms</span>}
+            {steps.slice(0, visibleSteps).map((step, i) => {
+              const isLatest = i === visibleSteps - 1;
+              return (
+                <motion.div
+                  key={step.id}
+                  initial={{ opacity: 0, x: -20, scale: 0.95 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.05 }}
+                  className="relative pl-12 pb-4"
+                >
+                  {/* Node dot */}
+                  <div className="absolute left-[16px] top-[20px] z-10">
+                    <div className={`w-[14px] h-[14px] rounded-full border-2 flex items-center justify-center ${
+                      step.type === "think" ? "border-purple-400 bg-purple-400/20" :
+                      step.type === "tool_call" ? "border-blue-400 bg-blue-400/20" :
+                      step.type === "decision" ? "border-yellow-400 bg-yellow-400/20" :
+                      "border-green-400 bg-green-400/20"
+                    }`}>
+                      {isLatest && animating && (
+                        <motion.div
+                          animate={{ scale: [1, 1.8, 1], opacity: [0.8, 0, 0.8] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                          className="absolute inset-0 rounded-full"
+                          style={{ background: step.type === "think" ? "rgba(167, 139, 250, 0.3)" : step.type === "tool_call" ? "rgba(79, 143, 255, 0.3)" : "rgba(0, 230, 138, 0.3)" }}
+                        />
+                      )}
+                    </div>
                   </div>
-                  <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed">{t(step.contentEn, step.contentZh)}</pre>
-                </div>
-              </motion.div>
-            ))}
+
+                  <div className={`glass-card p-5 border-l-2 ${stepColor(step.type)} ${
+                    isLatest && animating ? "ring-1 ring-primary/20 shadow-lg shadow-primary/5" : ""
+                  } transition-all duration-300`}>
+                    <div className="flex items-center gap-3 mb-3">
+                      {stepIcon(step.type, isLatest && animating ? "running" : step.status)}
+                      <span className="text-sm font-semibold">{t(step.titleEn, step.titleZh)}</span>
+                      {step.isLive && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20 flex items-center gap-1">
+                          <Activity className="w-2.5 h-2.5" /> LIVE
+                        </span>
+                      )}
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-accent text-muted-foreground ml-auto">
+                        Step {i + 1}/{steps.length}
+                      </span>
+                      {step.duration && <span className="text-[10px] text-muted-foreground">{step.duration}ms</span>}
+                    </div>
+                    <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed">{t(step.contentEn, step.contentZh)}</pre>
+                  </div>
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
         </div>
 
