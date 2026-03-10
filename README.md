@@ -8,6 +8,19 @@
 
 ---
 
+## v2.1 Updates (Latest)
+
+| # | Feature | Description |
+|---|---------|-------------|
+| 1 | **UI Overhaul** | Increased whitespace (48px+ card gaps), softened particle background, premium glassmorphism with `backdrop-blur(20px)`, hover pulse glow effects, consistent `font-[800]` headings |
+| 2 | **Token Monitor V2** | OKX V5 API real-time refresh every 5s, improved card layout with larger padding, sparkline charts, real volume data |
+| 3 | **Enhanced Search Engine** | Keyword-weighted matching across all 83 tools, module/tag/description search, one-click fill Copilot |
+| 4 | **Wallet Connect V2** | Real OKX Wallet `eth_getBalance` + multi-chain + USD value via OKX V5 ETH price, improved spacing |
+| 5 | **Cyber-Neural Particles V2** | Parallax depth layers, thinking chain data pulses traveling between nodes, softer organic motion, breathing gradient orbs |
+| 6 | **MCP Server Panel** | Live connection status indicator, URL input, connect/disconnect toggle, TX Hash display with explorer links, simulation fallback |
+| 7 | **Safety Modal** | 5s countdown timer, risk level indicator (low/medium/high), MCP protocol audit info, mandatory checkbox |
+| 8 | **Claw Prompt Generator** | 6 templates with quick presets, Skills + MCP + Safety toggles, one-click copy/download |
+
 ## v2.0 Updates
 
 | # | Feature | Description |
