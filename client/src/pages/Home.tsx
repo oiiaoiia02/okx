@@ -10,7 +10,7 @@ import {
   Zap, Terminal, Cpu, Wallet, Eye, FlaskConical, Shield, History,
   Brain, BookOpen, Layers, Search, ArrowRight, Copy, Check,
   BarChart3, Bot, Sparkles, ChevronRight, ExternalLink, Github,
-  Mic, MicOff, Play, Send, TrendingUp, TrendingDown, Activity,
+  Mic, MicOff, Play, Send, TrendingUp, TrendingDown, Activity, MessageSquare,
 } from "lucide-react";
 
 /* ─── Intent matching engine ─── */
@@ -603,6 +603,15 @@ export default function Home() {
             >
               <ExternalLink className="w-4 h-4" />
               {t("Official Docs", "官方文档")}
+            </a>
+            <a
+              href="https://t.me/se77ouo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2.5 px-10 py-4 rounded-[14px] border border-primary/30 text-primary font-[600] text-[14px] hover:border-primary/50 hover:bg-primary/5 hover:-translate-y-[1px] transition-all duration-300"
+            >
+              <MessageSquare className="w-4 h-4" />
+              Telegram
             </a>
           </motion.div>
         </div>
