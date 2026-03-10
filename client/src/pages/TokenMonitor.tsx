@@ -194,10 +194,10 @@ export default function TokenMonitor() {
   );
 
   return (
-    <div className="min-h-screen py-10 px-4 sm:px-6">
+    <div className="min-h-screen py-14 px-4 sm:px-6">
       <div className="container max-w-[1400px]">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-12">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
             <Eye className="w-4 h-4" />
             <span>{t("Tools", "实用工具")}</span>
@@ -215,7 +215,7 @@ export default function TokenMonitor() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/5 border border-primary/15">
+              <div className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-primary/5 border border-primary/12 backdrop-blur-sm">
                 <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                 <span className="text-[11px] font-[600] text-primary tracking-wide">
                   {t("LIVE · OKX V5 API", "实时 · OKX V5 API")}
